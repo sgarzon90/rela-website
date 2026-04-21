@@ -1,8 +1,9 @@
 import { Geist } from "next/font/google"
 import "./globals.css"
 import Navbar from "@/components/layout/Navbar"
-import { CartProvider } from "@/context/CartContext"
+import Footer from "@/components/layout/Footer"
 import CartDrawer from "@/components/ui/CartDrawer"
+import { CartProvider } from "@/context/CartContext"
 
 const geist = Geist({ subsets: ["latin"] })
 
@@ -17,9 +18,10 @@ export default function RootLayout({ children }) {
       <body className={geist.className}>
         <CartProvider>
           <Navbar />
-          {/* El drawer vive aquí para estar disponible en todas las páginas */}
           <CartDrawer />
+          {/* children representa el contenido de cada página */}
           {children}
+          <Footer />
         </CartProvider>
       </body>
     </html>
