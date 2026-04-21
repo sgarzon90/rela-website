@@ -1,6 +1,13 @@
+"use client"
+
 import Link from "next/link"
+// Importamos el hook del carrito para mostrar el contador
+import { useCart } from "@/context/CartContext"
 
 export default function Navbar() {
+  // Obtenemos el total de items y la función para abrir el carrito
+  const { totalItems, setIsOpen } = useCart()
+
   return (
     <nav className="bg-white border-b border-gray-100 px-6 py-4">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -23,9 +30,14 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Carrito */}
-        <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-black transition-colors">
-          🛒 <span>Carrito (0)</span>
+        {/* Botón del carrito — muestra el número de items */}
+        <button
+          onClick={() => setIsOpen(true)}
+          className="flex items-center gap-2 text-sm text-gray-600 hover:text-black transition-colors"
+        >
+          🛒
+          {/* Solo muestra el número si hay items en el carrito */}
+          <span>Carrito {totalItems > 0 && `(${totalItems})`}</span>
         </button>
 
       </div>

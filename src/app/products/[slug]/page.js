@@ -1,9 +1,13 @@
 import { supabase } from "@/lib/supabase"
 import { notFound } from "next/navigation"
+// Importamos el botón interactivo del carrito
+import AddToCartButton from "@/components/ui/AddToCartButton"
 
 export default async function ProductPage({ params }) {
+  // Obtenemos el slug de la URL para buscar el producto correcto
   const { slug } = await params
 
+  // Buscamos el producto en la BD incluyendo su categoría
   const { data: producto, error } = await supabase
     .from("productos")
     .select(`*, categorias(nombre, slug)`)
@@ -11,13 +15,14 @@ export default async function ProductPage({ params }) {
     .eq("activo", true)
     .single()
 
+  // Si no existe el producto mostramos página 404
   if (error || !producto) return notFound()
 
   return (
     <main className="max-w-6xl mx-auto px-6 py-12">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
 
-        {/* Imágenes */}
+        {/* Galería de imágenes del producto */}
         <div className="space-y-4">
           {producto.imagenes?.length > 0 ? (
             producto.imagenes.map((url, i) => (
@@ -34,7 +39,7 @@ export default async function ProductPage({ params }) {
           )}
         </div>
 
-        {/* Info */}
+        {/* Información y acciones del producto */}
         <div className="sticky top-6 space-y-6">
 
           {/* Categoría y nombre */}
@@ -50,61 +55,15 @@ export default async function ProductPage({ params }) {
             </p>
           </div>
 
-          {/* Descripción */}
+          {/* Descripción del producto */}
           {producto.descripcion && (
             <p className="text-sm text-gray-600 leading-relaxed">
               {producto.descripcion}
             </p>
           )}
 
-          {/* Tallas */}
-          {producto.tallas?.length > 0 && (
-            <div>
-              <p className="text-sm font-medium text-gray-900 mb-2">Talla</p>
-              <div className="flex gap-2 flex-wrap">
-                {producto.tallas.map((talla) => (
-                  <button
-                    key={talla}
-                    className="px-4 py-2 text-sm border border-gray-300 hover:border-black transition-colors"
-                  >
-                    {talla}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Colores */}
-          {producto.colores?.length > 0 && (
-            <div>
-              <p className="text-sm font-medium text-gray-900 mb-2">Color</p>
-              <div className="flex gap-2 flex-wrap">
-                {producto.colores.map((color) => (
-                  <button
-                    key={color}
-                    className="px-4 py-2 text-sm border border-gray-300 hover:border-black transition-colors"
-                  >
-                    {color}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Stock */}
-          <p className="text-sm text-gray-500">
-            {producto.stock > 0
-              ? `${producto.stock} unidades disponibles`
-              : "Agotado"}
-          </p>
-
-          {/* Botón agregar al carrito */}
-          <button
-            disabled={producto.stock === 0}
-            className="w-full bg-black text-white py-4 text-sm font-semibold tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {producto.stock > 0 ? "AGREGAR AL CARRITO" : "AGOTADO"}
-          </button>
+          {/* Botón de agregar al carrito con selectores de talla y color */}
+          <AddToCartButton product={producto} />
 
         </div>
       </div>
