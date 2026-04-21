@@ -16,7 +16,7 @@ export default function FeaturedProducts() {
             Destacados
           </h2>
         </div>
-        <a href="/productos" className="text-sm text-gray-500 hover:text-black transition-colors underline underline-offset-4">
+        <a href="/products" className="text-sm text-gray-500 hover:text-black transition-colors underline underline-offset-4">
           Ver todos →
         </a>
       </div>

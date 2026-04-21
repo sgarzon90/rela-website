@@ -15,10 +15,10 @@ export default function Navbar() {
           <Link href="/" className="text-sm text-gray-600 hover:text-black transition-colors">
             Inicio
           </Link>
-          <Link href="/productos" className="text-sm text-gray-600 hover:text-black transition-colors">
+          <Link href="/products" className="text-sm text-gray-600 hover:text-black transition-colors">
             Productos
           </Link>
-          <Link href="/nosotros" className="text-sm text-gray-600 hover:text-black transition-colors">
+          <Link href="/about" className="text-sm text-gray-600 hover:text-black transition-colors">
             Nosotros
           </Link>
         </div>
