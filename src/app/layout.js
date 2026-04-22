@@ -4,6 +4,7 @@ import Navbar from "@/components/layout/Navbar"
 import Footer from "@/components/layout/Footer"
 import CartDrawer from "@/components/ui/CartDrawer"
 import { CartProvider } from "@/context/CartContext"
+import { AuthProvider } from "@/context/AuthContext"
 
 const geist = Geist({ subsets: ["latin"] })
 
@@ -16,13 +17,15 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <body className={geist.className}>
-        <CartProvider>
-          <Navbar />
-          <CartDrawer />
-          {/* children representa el contenido de cada página */}
-          {children}
-          <Footer />
-        </CartProvider>
+        {/* AuthProvider envuelve todo para que cualquier componente sepa si hay un usuario logueado */}
+        <AuthProvider>
+          <CartProvider>
+            <Navbar />
+            <CartDrawer />
+            {children}
+            <Footer />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   )

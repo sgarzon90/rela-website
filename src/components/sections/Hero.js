@@ -25,13 +25,13 @@ export default function Hero() {
         {/* Botones */}
         <div className="mt-10 flex items-center justify-center gap-4">
           <Link
-            href="/productos"
+            href="/products"
             className="bg-white text-black px-8 py-3 text-sm font-semibold tracking-widest hover:bg-gray-200 transition-colors"
           >
             VER COLECCIÓN
           </Link>
           <Link
-            href="/nosotros"
+            href="/about"
             className="border border-white text-white px-8 py-3 text-sm font-semibold tracking-widest hover:bg-white hover:text-black transition-colors"
           >
             NUESTRA HISTORIA

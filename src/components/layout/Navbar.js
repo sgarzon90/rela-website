@@ -1,12 +1,13 @@
 "use client"
 
 import Link from "next/link"
-// Importamos el hook del carrito para mostrar el contador
 import { useCart } from "@/context/CartContext"
+import { useAuth } from "@/context/AuthContext"
 
 export default function Navbar() {
-  // Obtenemos el total de items y la función para abrir el carrito
   const { totalItems, setIsOpen } = useCart()
+  // Obtenemos el usuario actual y la función de logout
+  const { user, signOut } = useAuth()
 
   return (
     <nav className="bg-white border-b border-gray-100 px-6 py-4">
@@ -30,16 +31,42 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Botón del carrito — muestra el número de items */}
-        <button
-          onClick={() => setIsOpen(true)}
-          className="flex items-center gap-2 text-sm text-gray-600 hover:text-black transition-colors"
-        >
-          🛒
-          {/* Solo muestra el número si hay items en el carrito */}
-          <span>Carrito {totalItems > 0 && `(${totalItems})`}</span>
-        </button>
+        {/* Acciones del lado derecho */}
+        <div className="flex items-center gap-4">
 
+          {/* Si hay usuario logueado mostramos su nombre y botón de logout */}
+          {user ? (
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">
+                {user.user_metadata?.nombre || user.email}
+              </span>
+              <button
+                onClick={signOut}
+                className="text-sm text-gray-400 hover:text-black transition-colors"
+              >
+                Salir
+              </button>
+            </div>
+          ) : (
+            // Si no hay usuario mostramos el link de login
+            <Link
+              href="/auth/login"
+              className="text-sm text-gray-600 hover:text-black transition-colors"
+            >
+              Iniciar sesión
+            </Link>
+          )}
+
+          {/* Botón del carrito */}
+          <button
+            onClick={() => setIsOpen(true)}
+            className="flex items-center gap-2 text-sm text-gray-600 hover:text-black transition-colors"
+          >
+            🛒
+            {totalItems > 0 && <span>({totalItems})</span>}
+          </button>
+
+        </div>
       </div>
     </nav>
   )
