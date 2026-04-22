@@ -3,17 +3,24 @@
 import { useState } from "react"
 import { useCart } from "@/context/CartContext"
 import { useAuth } from "@/context/AuthContext"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 
 export default function Checkout() {
   const { items, total, clearCart } = useCart()
-  const { user } = useAuth()
-  const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  // Si no hay items redirigimos al carrito
+  // Mientras carga la sesión mostramos un mensaje de espera
+  if (authLoading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-400 text-sm">Cargando...</p>
+      </main>
+    )
+  }
+
+  // Si no hay items mostramos mensaje de carrito vacío
   if (items.length === 0) {
     return (
       <main className="min-h-screen flex items-center justify-center px-6">
@@ -30,7 +37,7 @@ export default function Checkout() {
     )
   }
 
-  // Si no está logueado lo mandamos al login
+  // Si no está logueado mostramos botón de login
   if (!user) {
     return (
       <main className="min-h-screen flex items-center justify-center px-6">
@@ -83,12 +90,12 @@ export default function Checkout() {
     <main className="max-w-2xl mx-auto px-6 py-12">
       <h1 className="text-2xl font-bold mb-8">Resumen de tu orden</h1>
 
-      {/* Lista de productos */}
+      {/* Lista de productos del carrito */}
       <div className="space-y-4 mb-8">
         {items.map((item, index) => (
           <div key={index} className="flex gap-4 py-4 border-b border-gray-100">
 
-            {/* Imagen */}
+            {/* Imagen del producto */}
             <div className="w-16 h-20 bg-gray-100 flex-shrink-0 overflow-hidden">
               {item.imagen && (
                 <img
@@ -99,7 +106,7 @@ export default function Checkout() {
               )}
             </div>
 
-            {/* Info */}
+            {/* Info del producto */}
             <div className="flex-1">
               <h3 className="text-sm font-semibold">{item.nombre}</h3>
               <p className="text-xs text-gray-400 mt-1">
@@ -112,7 +119,7 @@ export default function Checkout() {
               </p>
             </div>
 
-            {/* Precio */}
+            {/* Precio total del item */}
             <p className="text-sm font-semibold">
               ${(Number(item.precio) * item.cantidad).toLocaleString("es-CO")}
             </p>
@@ -121,7 +128,7 @@ export default function Checkout() {
         ))}
       </div>
 
-      {/* Total */}
+      {/* Total de la orden */}
       <div className="flex justify-between items-center py-4 border-t border-gray-200 mb-8">
         <span className="font-semibold">Total</span>
         <span className="text-xl font-bold">
@@ -129,12 +136,12 @@ export default function Checkout() {
         </span>
       </div>
 
-      {/* Error */}
+      {/* Mensaje de error si algo falla */}
       {error && (
         <p className="text-sm text-red-500 mb-4">{error}</p>
       )}
 
-      {/* Botón de pago */}
+      {/* Botón para proceder al pago */}
       <button
         onClick={handleCheckout}
         disabled={loading}
