@@ -1,50 +1,54 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase-browser"
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase-browser";
+
+export const metadata = {
+  title: "Iniciar sesión",
+  description: "Inicia sesión en tu cuenta RELA.",
+};
 
 export default function Login() {
-  const router = useRouter()
-  const supabase = createClient()
+  const router = useRouter();
+  const supabase = createClient();
 
   // Estado del formulario
-  const [form, setForm] = useState({ email: "", password: "" })
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
-  }
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
     // Intentamos iniciar sesión con Supabase
     const { error } = await supabase.auth.signInWithPassword({
       email: form.email,
       password: form.password,
-    })
+    });
 
     if (error) {
       // Mostramos el error en español
-      setError("Email o contraseña incorrectos")
-      setLoading(false)
-      return
+      setError("Email o contraseña incorrectos");
+      setLoading(false);
+      return;
     }
 
     // Si el login fue exitoso, redirigimos al inicio
-    router.push("/")
-    router.refresh()
-  }
+    router.push("/");
+    router.refresh();
+  };
 
   return (
     <main className="min-h-screen flex items-center justify-center px-6">
       <div className="w-full max-w-sm">
-
         {/* Encabezado */}
         <div className="text-center mb-8">
           <Link href="/" className="text-2xl font-bold tracking-widest">
@@ -53,14 +57,11 @@ export default function Login() {
           <h1 className="mt-4 text-xl font-semibold text-gray-900">
             Iniciar sesión
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Bienvenido de nuevo
-          </p>
+          <p className="mt-1 text-sm text-gray-500">Bienvenido de nuevo</p>
         </div>
 
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="space-y-4">
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Email
@@ -92,9 +93,7 @@ export default function Login() {
           </div>
 
           {/* Mensaje de error */}
-          {error && (
-            <p className="text-sm text-red-500">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-500">{error}</p>}
 
           <button
             type="submit"
@@ -103,18 +102,19 @@ export default function Login() {
           >
             {loading ? "ENTRANDO..." : "INICIAR SESIÓN"}
           </button>
-
         </form>
 
         {/* Link a registro */}
         <p className="mt-6 text-center text-sm text-gray-500">
           ¿No tienes cuenta?{" "}
-          <Link href="/auth/register" className="text-black font-semibold hover:underline">
+          <Link
+            href="/auth/register"
+            className="text-black font-semibold hover:underline"
+          >
             Regístrate
           </Link>
         </p>
-
       </div>
     </main>
-  )
+  );
 }

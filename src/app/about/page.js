@@ -1,9 +1,14 @@
-import Link from "next/link"
+import Link from "next/link";
+
+export const metadata = {
+  title: "Nosotros",
+  description: "Conoce la historia de RELA, una marca de ropa minimalista hecha en Colombia.",
+}
 
 export default function About() {
+  
   return (
     <main>
-
       {/* Hero de la página */}
       <section className="bg-black text-white py-32 px-6">
         <div className="max-w-3xl mx-auto text-center">
@@ -21,7 +26,6 @@ export default function About() {
       {/* Historia de la marca */}
       <section className="max-w-3xl mx-auto px-6 py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-
           <div className="space-y-6">
             <span className="text-xs tracking-[0.3em] text-gray-400 uppercase">
               Cómo empezó
@@ -30,26 +34,24 @@ export default function About() {
               Nació de una inconformidad
             </h2>
             <p className="text-gray-600 leading-relaxed">
-              RELA nació en Colombia con una idea simple: hacer ropa para 
-              personas que no necesitan que una etiqueta les diga quiénes son. 
+              RELA nació en Colombia con una idea simple: hacer ropa para
+              personas que no necesitan que una etiqueta les diga quiénes son.
               Prendas que duran, que se sienten bien y que no gritan.
             </p>
             <p className="text-gray-600 leading-relaxed">
-              Cada pieza está pensada para ser tuya — no de una temporada, 
-              no de una tendencia. Solo tuya.
+              Cada pieza está pensada para ser tuya — no de una temporada, no de
+              una tendencia. Solo tuya.
             </p>
           </div>
 
           {/* Imagen placeholder — puedes reemplazarla con una foto real */}
           <div className="bg-gray-100 aspect-square" />
-
         </div>
       </section>
 
       {/* Valores */}
       <section className="bg-gray-50 py-20 px-6">
         <div className="max-w-4xl mx-auto">
-
           <div className="text-center mb-14">
             <span className="text-xs tracking-[0.3em] text-gray-400 uppercase">
               Lo que nos mueve
@@ -60,13 +62,12 @@ export default function About() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-
             <div className="text-center space-y-3">
               <div className="text-4xl">🧵</div>
               <h3 className="font-bold text-gray-900">Calidad real</h3>
               <p className="text-sm text-gray-500 leading-relaxed">
-                Usamos materiales que duran. No fast fashion, 
-                no compromisos con la calidad.
+                Usamos materiales que duran. No fast fashion, no compromisos con
+                la calidad.
               </p>
             </div>
 
@@ -74,8 +75,8 @@ export default function About() {
               <div className="text-4xl">🇨🇴</div>
               <h3 className="font-bold text-gray-900">Hecho en Colombia</h3>
               <p className="text-sm text-gray-500 leading-relaxed">
-                Producción local, apoyo a la industria colombiana 
-                y orgullo por lo nuestro.
+                Producción local, apoyo a la industria colombiana y orgullo por
+                lo nuestro.
               </p>
             </div>
 
@@ -83,11 +84,10 @@ export default function About() {
               <div className="text-4xl">✦</div>
               <h3 className="font-bold text-gray-900">Sin ruido</h3>
               <p className="text-sm text-gray-500 leading-relaxed">
-                Diseños limpios, sin logos gigantes ni estampados 
-                que griten. Solo la prenda.
+                Diseños limpios, sin logos gigantes ni estampados que griten.
+                Solo la prenda.
               </p>
             </div>
-
           </div>
         </div>
       </section>
@@ -109,7 +109,6 @@ export default function About() {
           </Link>
         </div>
       </section>
-
     </main>
-  )
+  );
 }

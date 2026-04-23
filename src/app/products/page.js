@@ -1,51 +1,56 @@
-import { supabase } from "@/lib/supabase"
-import ProductCard from "@/components/ui/ProductCard"
-import ProductFilters from "@/components/ui/ProductFilters"
-import { Suspense } from "react"
+import { supabase } from "@/lib/supabase";
+import ProductCard from "@/components/ui/ProductCard";
+import ProductFilters from "@/components/ui/ProductFilters";
+import { Suspense } from "react";
+
+export const metadata = {
+  title: "Productos",
+  description:
+    "Explora toda la colección de RELA. Camisetas, hoodies, pantalones y más.",
+};
 
 export default async function Products({ searchParams }) {
-  const params = await searchParams
-  const categoriaSlug = params?.categoria || null
-  const orden = params?.orden || "recientes"
+  const params = await searchParams;
+  const categoriaSlug = params?.categoria || null;
+  const orden = params?.orden || "recientes";
 
   // Traemos todas las categorías para los filtros
   const { data: categorias } = await supabase
     .from("categorias")
     .select("*")
-    .order("nombre")
+    .order("nombre");
 
   // Construimos la query base de productos
   let query = supabase
     .from("productos")
     .select(`*, categorias(nombre, slug)`)
-    .eq("activo", true)
+    .eq("activo", true);
 
   // Si hay un filtro de categoría lo aplicamos
   if (categoriaSlug) {
-    const categoria = categorias?.find((c) => c.slug === categoriaSlug)
+    const categoria = categorias?.find((c) => c.slug === categoriaSlug);
     if (categoria) {
-      query = query.eq("categoria_id", categoria.id)
+      query = query.eq("categoria_id", categoria.id);
     }
   }
 
   // Aplicamos el orden seleccionado
   if (orden === "precio-asc") {
-    query = query.order("precio", { ascending: true })
+    query = query.order("precio", { ascending: true });
   } else if (orden === "precio-desc") {
-    query = query.order("precio", { ascending: false })
+    query = query.order("precio", { ascending: false });
   } else {
-    query = query.order("created_at", { ascending: false })
+    query = query.order("created_at", { ascending: false });
   }
 
-  const { data: productos, error } = await query
+  const { data: productos, error } = await query;
 
   if (error) {
-    return <p className="p-8 text-red-500">Error cargando productos</p>
+    return <p className="p-8 text-red-500">Error cargando productos</p>;
   }
 
   return (
     <main className="max-w-6xl mx-auto px-6 py-12">
-
       {/* Encabezado */}
       <div className="mb-10">
         <span className="text-xs tracking-[0.3em] text-gray-400 uppercase">
@@ -76,7 +81,6 @@ export default async function Products({ searchParams }) {
           ))}
         </div>
       )}
-
     </main>
-  )
+  );
 }

@@ -3,6 +3,31 @@ import { notFound } from "next/navigation"
 import AddToCartButton from "@/components/ui/AddToCartButton"
 import ImageGallery from "@/components/ui/ImageGallery"
 
+// Esta función genera metadata dinámica para cada producto
+export async function generateMetadata({ params }) {
+  const { slug } = await params
+
+  const { data: producto } = await supabase
+    .from("productos")
+    .select("nombre, descripcion, imagenes")
+    .eq("slug", slug)
+    .single()
+
+  if (!producto) {
+    return { title: "Producto no encontrado" }
+  }
+
+  return {
+    title: producto.nombre,
+    description: producto.descripcion || `Compra ${producto.nombre} en RELA`,
+    openGraph: {
+      title: producto.nombre,
+      description: producto.descripcion || `Compra ${producto.nombre} en RELA`,
+      images: producto.imagenes?.[0] ? [{ url: producto.imagenes[0] }] : [],
+    },
+  }
+}
+
 export default async function ProductPage({ params }) {
   const { slug } = await params
 
