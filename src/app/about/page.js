@@ -45,7 +45,13 @@ export default function About() {
           </div>
 
           {/* Imagen placeholder — puedes reemplazarla con una foto real */}
-          <div className="bg-gray-100 aspect-square" />
+          
+          <img
+            src="/about.png"
+            alt="RELA"
+            className="h-full w-auto object-contain"
+          />
+          
         </div>
       </section>
 

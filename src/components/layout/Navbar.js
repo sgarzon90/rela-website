@@ -46,7 +46,7 @@ export default function Navbar() {
           onClick={() => setMenuAbierto(false)}
         >
           <img
-            src="/logo3.png"
+            src="/Logo3.png"
             alt="RELA"
             className="h-12 w-auto object-contain"
           />
