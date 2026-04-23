@@ -58,8 +58,8 @@ export default function ResetPassword() {
       <div className="w-full max-w-sm">
 
         <div className="text-center mb-8">
-          <Link href="/" className="text-2xl font-bold tracking-widest">
-            RELA
+          <Link href="/">
+            <img src="/Logo3.png" alt="RELA" className="h-22 w-auto mx-auto" />
           </Link>
           <h1 className="mt-4 text-xl font-semibold text-gray-900">
             Restablecer contraseña
