@@ -1,22 +1,46 @@
 import { supabase } from "@/lib/supabase"
 import ProductCard from "@/components/ui/ProductCard"
+import ProductFilters from "@/components/ui/ProductFilters"
+import { Suspense } from "react"
 
-export default async function Productos() {
-  const { data: productos, error } = await supabase
+export default async function Products({ searchParams }) {
+  const params = await searchParams
+  const categoriaSlug = params?.categoria || null
+  const orden = params?.orden || "recientes"
+
+  // Traemos todas las categorías para los filtros
+  const { data: categorias } = await supabase
+    .from("categorias")
+    .select("*")
+    .order("nombre")
+
+  // Construimos la query base de productos
+  let query = supabase
     .from("productos")
-    .select(`
-      *,
-      categorias (
-        nombre,
-        slug
-      )
-    `)
+    .select(`*, categorias(nombre, slug)`)
     .eq("activo", true)
-    .order("created_at", { ascending: false })
+
+  // Si hay un filtro de categoría lo aplicamos
+  if (categoriaSlug) {
+    const categoria = categorias?.find((c) => c.slug === categoriaSlug)
+    if (categoria) {
+      query = query.eq("categoria_id", categoria.id)
+    }
+  }
+
+  // Aplicamos el orden seleccionado
+  if (orden === "precio-asc") {
+    query = query.order("precio", { ascending: true })
+  } else if (orden === "precio-desc") {
+    query = query.order("precio", { ascending: false })
+  } else {
+    query = query.order("created_at", { ascending: false })
+  }
+
+  const { data: productos, error } = await query
 
   if (error) {
-    console.error(error)
-    return <p>Error cargando productos</p>
+    return <p className="p-8 text-red-500">Error cargando productos</p>
   }
 
   return (
@@ -35,10 +59,15 @@ export default async function Productos() {
         </p>
       </div>
 
-      {/* Grid */}
+      {/* Filtros — Suspense es necesario porque useSearchParams es async */}
+      <Suspense fallback={<div className="h-12 mb-10" />}>
+        <ProductFilters categorias={categorias || []} />
+      </Suspense>
+
+      {/* Grid de productos */}
       {productos.length === 0 ? (
         <p className="text-gray-400 text-center py-20">
-          No hay productos disponibles aún.
+          No hay productos en esta categoría.
         </p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
