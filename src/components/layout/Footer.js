@@ -4,13 +4,18 @@ export default function Footer() {
   return (
     <footer className="bg-black text-white mt-20">
       <div className="max-w-6xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-          <div className="md:col-span-2">
+
+        {/* En móvil es una columna, en desktop es grid de 4 */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
+
+          {/* Columna 1 — Logo y descripción — ocupa 2 columnas en móvil y desktop */}
+          <div className="col-span-2">
             <Link href="/" className="text-2xl font-bold tracking-widest">
               RELA
             </Link>
             <p className="mt-4 text-sm text-gray-400 max-w-xs leading-relaxed">
-              Ropa diseñada para quienes no necesitan seguir tendencias. Solo ser ellos mismos.
+              Ropa diseñada para quienes no necesitan seguir tendencias.
+              Solo ser ellos mismos.
             </p>
             <div className="flex gap-4 mt-6">
               <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-400 hover:text-white transition-colors">
@@ -21,6 +26,8 @@ export default function Footer() {
               </a>
             </div>
           </div>
+
+          {/* Columna 2 — Tienda */}
           <div>
             <h3 className="text-xs tracking-[0.2em] uppercase text-gray-400 mb-4">Tienda</h3>
             <ul className="space-y-3">
@@ -36,6 +43,8 @@ export default function Footer() {
               </li>
             </ul>
           </div>
+
+          {/* Columna 3 — Ayuda */}
           <div>
             <h3 className="text-xs tracking-[0.2em] uppercase text-gray-400 mb-4">Ayuda</h3>
             <ul className="space-y-3">
@@ -56,7 +65,10 @@ export default function Footer() {
               </li>
             </ul>
           </div>
+
         </div>
+
+        {/* Línea inferior */}
         <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-gray-500">
             © {new Date().getFullYear()} RELA. Todos los derechos reservados.
@@ -70,6 +82,7 @@ export default function Footer() {
             </Link>
           </div>
         </div>
+
       </div>
     </footer>
   )

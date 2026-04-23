@@ -5,11 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 
-export const metadata = {
-  title: "Iniciar sesión",
-  description: "Inicia sesión en tu cuenta RELA.",
-};
-
 export default function Login() {
   const router = useRouter();
   const supabase = createClient();

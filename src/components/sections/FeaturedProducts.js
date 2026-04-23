@@ -1,6 +1,6 @@
-import ProductCard from "@/components/ui/ProductCard"
-import { supabase } from "@/lib/supabase"
-import Link from "next/link"
+import ProductCard from "@/components/ui/ProductCard";
+import { supabase } from "@/lib/supabase";
+import Link from "next/link";
 
 // Este componente es async porque necesita esperar los datos de la BD
 export default async function FeaturedProducts() {
@@ -10,21 +10,20 @@ export default async function FeaturedProducts() {
     .select(`*, categorias(nombre, slug)`)
     .eq("activo", true)
     .order("created_at", { ascending: false })
-    .limit(4)
+    .limit(4);
 
   // Si hay error o no hay productos, no mostramos la sección
-  if (error || !productos?.length) return null
+  if (error || !productos?.length) return null;
 
   return (
     <section className="max-w-6xl mx-auto px-6 py-20">
-
       {/* Encabezado de la sección */}
       <div className="flex items-end justify-between mb-10">
         <div>
           <span className="text-xs tracking-[0.3em] text-gray-400 uppercase">
             Lo más nuevo
           </span>
-          <h2 className="mt-2 text-3xl font-bold text-gray-900">
+          <h2 className="mt-2 text-3xl font-serif font-bold text-gray-900">
             Destacados
           </h2>
         </div>
@@ -43,7 +42,6 @@ export default async function FeaturedProducts() {
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
-
     </section>
-  )
+  );
 }

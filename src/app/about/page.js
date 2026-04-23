@@ -2,11 +2,11 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Nosotros",
-  description: "Conoce la historia de RELA, una marca de ropa minimalista hecha en Colombia.",
-}
+  description:
+    "Conoce la historia de RELA, una marca de ropa minimalista hecha en Colombia.",
+};
 
 export default function About() {
-  
   return (
     <main>
       {/* Hero de la página */}
@@ -18,7 +18,7 @@ export default function About() {
           <h1 className="mt-4 text-5xl font-bold tracking-tight">
             No seguimos tendencias.
             <br />
-            <span className="italic">Las ignoramos.</span>
+            <span className="font-serif italic text-arena">Las ignoramos.</span>
           </h1>
         </div>
       </section>
@@ -30,7 +30,7 @@ export default function About() {
             <span className="text-xs tracking-[0.3em] text-gray-400 uppercase">
               Cómo empezó
             </span>
-            <h2 className="text-3xl font-bold text-gray-900">
+            <h2 className="text-3xl font-serif font-bold text-gray-900">
               Nació de una inconformidad
             </h2>
             <p className="text-gray-600 leading-relaxed">

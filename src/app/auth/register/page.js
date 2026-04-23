@@ -5,11 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 
-export const metadata = {
-  title: "Crear cuenta",
-  description: "Crea tu cuenta en RELA y empieza a comprar.",
-};
-
 export default function Register() {
   const router = useRouter();
   const supabase = createClient();
