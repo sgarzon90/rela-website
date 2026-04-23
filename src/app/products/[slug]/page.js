@@ -1,10 +1,9 @@
 import { supabase } from "@/lib/supabase"
 import { notFound } from "next/navigation"
-// Importamos el botón interactivo del carrito
 import AddToCartButton from "@/components/ui/AddToCartButton"
+import ImageGallery from "@/components/ui/ImageGallery"
 
 export default async function ProductPage({ params }) {
-  // Obtenemos el slug de la URL para buscar el producto correcto
   const { slug } = await params
 
   // Buscamos el producto en la BD incluyendo su categoría
@@ -22,22 +21,8 @@ export default async function ProductPage({ params }) {
     <main className="max-w-6xl mx-auto px-6 py-12">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
 
-        {/* Galería de imágenes del producto */}
-        <div className="space-y-4">
-          {producto.imagenes?.length > 0 ? (
-            producto.imagenes.map((url, i) => (
-              <div key={i} className="bg-gray-100 aspect-[3/4] overflow-hidden">
-                <img
-                  src={url}
-                  alt={`${producto.nombre} - foto ${i + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ))
-          ) : (
-            <div className="bg-gray-100 aspect-[3/4]" />
-          )}
-        </div>
+        {/* Galería de imágenes con carrusel */}
+        <ImageGallery imagenes={producto.imagenes} nombre={producto.nombre} />
 
         {/* Información y acciones del producto */}
         <div className="sticky top-6 space-y-6">
