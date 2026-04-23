@@ -46,8 +46,8 @@ export default function Login() {
       <div className="w-full max-w-sm">
         {/* Encabezado */}
         <div className="text-center mb-8">
-          <Link href="/" className="text-2xl font-bold tracking-widest">
-            RELA
+          <Link href="/">
+            <img src="/logo3.png" alt="RELA" className="h-22 w-auto mx-auto" />
           </Link>
           <h1 className="mt-4 text-xl font-semibold text-gray-900">
             Iniciar sesión
