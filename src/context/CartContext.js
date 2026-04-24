@@ -49,7 +49,7 @@ export function CartProvider({ children }) {
         cantidad,
       }]
     })
-    setIsOpen(true)
+    //setIsOpen(true)
   }
 
   const removeItem = (id, talla, color) => {

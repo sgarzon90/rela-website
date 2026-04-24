@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-geist), sans-serif;
+  --font-serif: var(--font-playfair), serif;
+  --color-arena: #E8E0D5;
+  --color-arena-dark: #D4C9BA;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
