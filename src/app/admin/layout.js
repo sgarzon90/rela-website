@@ -27,7 +27,7 @@ export default async function AdminLayout({ children }) {
 
       <div className="flex">
 
-        {/* Sidebar — oculto en móvil, visible en desktop */}
+        {/* Sidebar desktop */}
         <aside className="hidden md:flex w-64 bg-gray-900 text-white flex-shrink-0 flex-col min-h-screen sticky top-0">
           <div className="p-6 border-b border-gray-700">
             <Link href="/" className="text-xl font-bold tracking-widest">
@@ -46,11 +46,8 @@ export default async function AdminLayout({ children }) {
             <Link href="/admin/productos/new" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white rounded transition-colors">
               ➕ Nuevo producto
             </Link>
-            <Link href="/admin/categorias" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white rounded transition-colors">
-              🏷️ Categorías
-            </Link>
-            <Link href="/admin/colores" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white rounded transition-colors">
-              🎨 Colores
+            <Link href="/admin/configuracion" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white rounded transition-colors">
+              ⚙️ Configuración
             </Link>
             <Link href="/admin/ordenes" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white rounded transition-colors">
               📦 Órdenes
@@ -64,7 +61,7 @@ export default async function AdminLayout({ children }) {
           </div>
         </aside>
 
-        {/* Navegación móvil del admin — barra horizontal */}
+        {/* Navegación móvil */}
         <div className="md:hidden w-full">
           <nav className="bg-gray-900 text-white px-4 overflow-x-auto">
             <div className="flex gap-1 py-2 min-w-max">
@@ -77,11 +74,8 @@ export default async function AdminLayout({ children }) {
               <Link href="/admin/productos/new" className="flex items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:bg-gray-800 hover:text-white rounded transition-colors whitespace-nowrap">
                 ➕ Nuevo
               </Link>
-              <Link href="/admin/categorias" className="flex items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:bg-gray-800 hover:text-white rounded transition-colors whitespace-nowrap">
-                🏷️ Categorías
-              </Link>
-              <Link href="/admin/colores" className="flex items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:bg-gray-800 hover:text-white rounded transition-colors whitespace-nowrap">
-                🎨 Colores
+              <Link href="/admin/configuracion" className="flex items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:bg-gray-800 hover:text-white rounded transition-colors whitespace-nowrap">
+                ⚙️ Configuración
               </Link>
               <Link href="/admin/ordenes" className="flex items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:bg-gray-800 hover:text-white rounded transition-colors whitespace-nowrap">
                 📦 Órdenes
@@ -92,7 +86,6 @@ export default async function AdminLayout({ children }) {
             </div>
           </nav>
 
-          {/* Contenido móvil */}
           <main className="p-4">
             {children}
           </main>

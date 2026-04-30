@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { useFlyToCart } from "@/context/FlyToCartContext";
 
 export default function Navbar() {
   const { totalItems, setIsOpen } = useCart();
-  // Agregamos loadingPerfil para saber cuando el perfil termina de cargar
   const { user, signOut, perfil, loadingPerfil } = useAuth();
+  const { cartIconRef, cartBounce } = useFlyToCart();
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -66,7 +67,6 @@ export default function Navbar() {
                 <span className="absolute -bottom-1 left-0 w-0 h-px bg-black transition-all duration-300 group-hover:w-full" />
               </Link>
             ))}
-            {/* Solo mostramos Admin cuando el perfil haya cargado y sea admin */}
             {!loadingPerfil && perfil?.rol === "admin" && (
               <Link
                 href="/admin"
@@ -109,8 +109,9 @@ export default function Navbar() {
 
             <div className="w-px h-4 bg-gray-200" />
 
-            {/* Carrito desktop */}
+            {/* Carrito desktop — con ref para la animación */}
             <button
+              ref={cartIconRef}
               onClick={() => setIsOpen(true)}
               className="relative flex items-center gap-1.5 text-gray-500 hover:text-black transition-colors duration-200"
               aria-label="Abrir carrito"
@@ -123,6 +124,7 @@ export default function Navbar() {
                 viewBox="0 0 24 24"
                 stroke="currentColor"
                 strokeWidth={1.5}
+                className={cartBounce ? "animate-bounce" : ""}
               >
                 <path
                   strokeLinecap="round"
@@ -131,7 +133,11 @@ export default function Navbar() {
                 />
               </svg>
               {totalItems > 0 && (
-                <span className="absolute -top-2 -right-2 bg-black text-white text-[10px] font-semibold w-4 h-4 rounded-full flex items-center justify-center">
+                <span
+                  className={`absolute -top-2 -right-2 bg-black text-white text-[10px] font-semibold w-4 h-4 rounded-full flex items-center justify-center transition-transform ${
+                    cartBounce ? "scale-125" : "scale-100"
+                  }`}
+                >
                   {totalItems}
                 </span>
               )}
@@ -156,7 +162,7 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Menú móvil desplegable */}
+        {/* Menú móvil */}
         <div
           className={`md:hidden absolute top-full left-0 right-0 bg-black overflow-hidden transition-all duration-300 ease-in-out ${
             menuAbierto ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
@@ -179,7 +185,6 @@ export default function Navbar() {
               </Link>
             ))}
 
-            {/* Link admin en móvil — solo cuando perfil haya cargado */}
             {!loadingPerfil && perfil?.rol === "admin" && (
               <Link
                 href="/admin"
@@ -193,7 +198,6 @@ export default function Navbar() {
               </Link>
             )}
 
-            {/* Info usuario logueado */}
             {user && (
               <div className="pt-4 mt-2 border-t border-white/10">
                 <div className="flex items-center justify-between">
@@ -216,7 +220,6 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Espacio para que el bottom bar no tape el contenido en móvil */}
       <div className="md:hidden h-16" />
     </>
   );
