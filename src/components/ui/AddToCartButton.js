@@ -1,35 +1,34 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useCart } from "@/context/CartContext"
-import { useToast } from "@/context/ToastContext"
+import { useState } from "react";
+import { useCart } from "@/context/CartContext";
+import { useToast } from "@/context/ToastContext";
 
 export default function AddToCartButton({ product }) {
-  const [selectedTalla, setSelectedTalla] = useState("")
-  const [selectedColor, setSelectedColor] = useState("")
-  const { addItem } = useCart()
-  const { showToast } = useToast()
+  const [selectedTalla, setSelectedTalla] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
+  const { addItem } = useCart();
+  const { showToast } = useToast();
 
   const handleAddToCart = () => {
     if (product.tallas?.length > 0 && !selectedTalla) {
-      showToast("Por favor selecciona una talla")
-      return
+      showToast("Por favor selecciona una talla");
+      return;
     }
 
     if (product.colores?.length > 0 && !selectedColor) {
-      showToast("Por favor selecciona un color")
-      return
+      showToast("Por favor selecciona un color");
+      return;
     }
 
-    addItem(product, selectedTalla, selectedColor)
-    showToast(`${product.nombre} agregado al carrito`)
-  }
+    addItem(product, selectedTalla, selectedColor);
+    showToast(`${product.nombre} agregado al carrito`);
+  };
 
   return (
     <>
       {/* Versión desktop — se muestra normalmente en la página */}
       <div className="hidden md:block space-y-4">
-
         {/* Selector de tallas */}
         {product.tallas?.length > 0 && (
           <div>
@@ -91,12 +90,10 @@ export default function AddToCartButton({ product }) {
         >
           {product.stock > 0 ? "AGREGAR AL CARRITO" : "AGOTADO"}
         </button>
-
       </div>
 
       {/* Versión móvil — selectores normales + botón sticky abajo */}
       <div className="md:hidden space-y-4">
-
         {/* Selector de tallas en móvil */}
         {product.tallas?.length > 0 && (
           <div>
@@ -152,11 +149,9 @@ export default function AddToCartButton({ product }) {
 
         {/* Espacio para que el botón sticky no tape el contenido */}
         <div className="h-20" />
-
       </div>
-
       {/* Botón sticky en móvil — siempre visible en la parte inferior */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 z-40">
+      <div className="md:hidden fixed bottom-16 left-0 right-0 p-4 bg-white border-t border-gray-100 z-30">
         <button
           onClick={handleAddToCart}
           disabled={product.stock === 0}
@@ -168,5 +163,5 @@ export default function AddToCartButton({ product }) {
         </button>
       </div>
     </>
-  )
+  );
 }

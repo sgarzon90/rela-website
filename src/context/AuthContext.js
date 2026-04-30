@@ -1,49 +1,68 @@
-"use client"
+"use client";
 
-import { createContext, useContext, useEffect, useState } from "react"
-import { createClient } from "@/lib/supabase-browser"
+import { createContext, useContext, useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase-browser";
 
-const AuthContext = createContext({})
+const AuthContext = createContext({});
 
 export function AuthProvider({ children }) {
-  // Estado para guardar el usuario actual
-  const [user, setUser] = useState(null)
-  // Estado para saber si todavía estamos verificando la sesión
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(null);
+  const [perfil, setPerfil] = useState(null);
+  const [loading, setLoading] = useState(true);
+  // Estado específico para saber si el perfil está cargando
+  const [loadingPerfil, setLoadingPerfil] = useState(false);
 
-  const supabase = createClient()
+  const supabase = createClient();
+
+  const cargarPerfil = async (userId) => {
+    setLoadingPerfil(true);
+    const { data } = await supabase
+      .from("perfiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+    setPerfil(data);
+    setLoadingPerfil(false);
+  };
 
   useEffect(() => {
-    // Verificamos si hay una sesión activa al cargar la app
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
-      setLoading(false)
-    }
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+      if (session?.user) await cargarPerfil(session.user.id);
+      setLoading(false);
+    };
 
-    getSession()
+    getSession();
 
-    // Escuchamos cambios en la sesión (login, logout)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        await cargarPerfil(session.user.id);
+      } else {
+        setPerfil(null);
       }
-    )
+    });
 
-    // Limpiamos el listener cuando el componente se desmonta
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => subscription.unsubscribe();
+  }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut()
-  }
+    await supabase.auth.signOut();
+    setPerfil(null);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOut }}>
+    <AuthContext.Provider
+      value={{ user, perfil, loading, loadingPerfil, signOut }}
+    >
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
-// Hook para usar la autenticación desde cualquier componente
-export const useAuth = () => useContext(AuthContext)
+export const useAuth = () => useContext(AuthContext);
