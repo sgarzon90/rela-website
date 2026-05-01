@@ -6,23 +6,29 @@ export default async function DetalleOrden({ params }) {
   const supabase = await createClient();
   const { id } = await params;
 
-  // Traemos la orden con los datos del cliente y los items
+  // Traemos la orden con sus items
   const { data: orden, error } = await supabase
     .from("ordenes")
     .select(
       `
+    *,
+    orden_items (
       *,
-      perfiles (nombre),
-      orden_items (
-        *,
-        productos (nombre, imagenes, slug)
-      )
-    `,
+      productos (nombre, imagenes, slug)
+    )
+  `,
     )
     .eq("id", id)
     .single();
 
   if (error || !orden) return notFound();
+
+  // Traemos el perfil del cliente por separado
+  const { data: perfil } = await supabase
+    .from("perfiles")
+    .select("nombre")
+    .eq("id", orden.usuario_id)
+    .single();
 
   // Colores para cada estado
   const estadoColores = {
@@ -130,7 +136,7 @@ export default async function DetalleOrden({ params }) {
           <div className="bg-white rounded shadow-sm border border-gray-100 p-4">
             <h2 className="font-semibold text-gray-900 mb-3">Cliente</h2>
             <p className="text-sm text-gray-700">
-              {orden.perfiles?.nombre || "Cliente"}
+              {perfil?.nombre || "Cliente"}
             </p>
             <p className="text-xs text-gray-400 mt-1">
               ID: {orden.usuario_id?.slice(0, 8)}...

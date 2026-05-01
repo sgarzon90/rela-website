@@ -9,6 +9,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/context/ToastContext";
 import BottomBar from "@/components/layout/BottomBar";
 import { FlyToCartProvider } from "@/context/FlyToCartContext";
+import WhatsAppButton from "@/components/ui/WhatsAppButton";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -68,6 +69,7 @@ export default function RootLayout({ children }) {
                 {children}
                 <Footer />
                 <BottomBar />
+                <WhatsAppButton />
               </ToastProvider>
             </FlyToCartProvider>
           </CartProvider>

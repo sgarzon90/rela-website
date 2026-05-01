@@ -100,7 +100,7 @@ export default function AddToCartButton({ product }) {
     }
 
     addItem(product, selectedTalla, selectedColor);
-    showToast(`${product.nombre} agregado al carrito`);
+   // showToast(`${product.nombre} agregado al carrito`);
   };
 
   const Selectores = () => (

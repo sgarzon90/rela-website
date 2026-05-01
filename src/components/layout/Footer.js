@@ -8,18 +8,15 @@ export default function Footer() {
 
           {/* Columna 1 — Logo y descripción */}
           <div className="col-span-2">
-            {/* Logo — centrado en móvil, izquierda en desktop */}
             <Link href="/" className="block w-fit mx-auto md:mx-0">
               <img src="/Logo3-white.png" alt="RELA" className="h-12 w-auto" />
             </Link>
 
-            {/* Texto — centrado en móvil, izquierda en desktop */}
             <p className="mt-4 text-sm text-gray-400 max-w-xs leading-relaxed text-center md:text-left mx-auto md:mx-0">
               Ropa diseñada para quienes no necesitan seguir tendencias. Solo
               ser ellos mismos.
             </p>
 
-            {/* Iconos — centrados en móvil, izquierda en desktop */}
             <div className="flex gap-4 mt-6 justify-center md:justify-start">
               <a
                 href="https://www.instagram.com/rela_tienda/"
@@ -86,22 +83,16 @@ export default function Footer() {
               </li>
             </ul>
           </div>
+
         </div>
 
         {/* Línea inferior */}
-        <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="border-t border-gray-800 mt-12 pt-8 flex items-center justify-center">
           <p className="text-xs text-gray-500">
             © {new Date().getFullYear()} RELA. Todos los derechos reservados.
           </p>
-          <div className="flex gap-6">
-            <Link href="/privacy" className="text-xs text-gray-500 hover:text-white transition-colors">
-              Privacidad
-            </Link>
-            <Link href="/terms" className="text-xs text-gray-500 hover:text-white transition-colors">
-              Términos
-            </Link>
-          </div>
         </div>
+
       </div>
     </footer>
   );

@@ -7,16 +7,10 @@ export default async function AdminOrdenes({ searchParams }) {
   const estadoFiltro = params?.estado || "todas";
 
   // Construimos la query base trayendo también los datos del usuario
+  // Traemos las órdenes sin join a perfiles
   let query = supabase
     .from("ordenes")
-    .select(
-      `
-      *,
-      perfiles (
-        nombre
-      )
-    `,
-    )
+    .select("*")
     .order("created_at", { ascending: false });
 
   // Aplicamos filtro de estado si existe
@@ -26,12 +20,22 @@ export default async function AdminOrdenes({ searchParams }) {
 
   const { data: ordenes, error } = await query;
 
-  if (error) {
-    return (
-      <p className="p-8 text-red-500">
-        Error cargando órdenes: {error.message}
-      </p>
-    );
+  // Luego traemos los nombres de los clientes por separado
+  const usuarioIds = [
+    ...new Set(ordenes?.map((o) => o.usuario_id).filter(Boolean)),
+  ];
+  let perfilesMap = {};
+
+  if (usuarioIds.length > 0) {
+    const { data: perfiles } = await supabase
+      .from("perfiles")
+      .select("id, nombre")
+      .in("id", usuarioIds);
+
+    // Creamos un mapa id → nombre para acceder fácilmente
+    perfiles?.forEach((p) => {
+      perfilesMap[p.id] = p.nombre;
+    });
   }
 
   // Colores para cada estado de la orden
@@ -119,7 +123,7 @@ export default async function AdminOrdenes({ searchParams }) {
 
                   {/* Nombre del cliente */}
                   <td className="px-6 py-4 text-sm text-gray-600">
-                    {orden.perfiles?.nombre || "Cliente"}
+                    {perfilesMap[orden.usuario_id] || "Cliente"}
                   </td>
 
                   {/* Estado con color */}
