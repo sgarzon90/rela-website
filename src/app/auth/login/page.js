@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase-browser";
+import { useRouter, useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase";
 
 export default function Login() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   // Estado del formulario
@@ -36,8 +37,9 @@ export default function Login() {
       return;
     }
 
-    // Si el login fue exitoso, redirigimos al inicio
-    router.push("/");
+    // Si el login fue exitoso, redirigimos al redirect o al inicio
+    const redirect = searchParams.get("redirect") || "/"
+    router.push(redirect);
     router.refresh();
   };
 
@@ -73,9 +75,17 @@ export default function Login() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Contraseña
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Contraseña
+              </label>
+              <Link
+                href="/auth/reset-password"
+                className="text-xs text-gray-400 hover:text-black transition-colors"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
             <input
               type="password"
               name="password"

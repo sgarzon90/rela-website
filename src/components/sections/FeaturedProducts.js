@@ -1,9 +1,10 @@
 import ProductCard from "@/components/ui/ProductCard"
 import FadeIn from "@/components/ui/FadeIn"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase-server"
 import Link from "next/link"
 
 export default async function FeaturedProducts() {
+  const supabase = await createClient();
   const { data: productos, error } = await supabase
     .from("productos")
     .select(`*, categorias(nombre, slug)`)

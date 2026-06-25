@@ -1,10 +1,12 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import { notFound } from "next/navigation";
-import AddToCartButton from "@/components/ui/AddToCartButton";
-import ImageGallery from "@/components/ui/ImageGallery";
+import ProductDetailClient from "@/components/ui/ProductDetailClient";
+import ProductCard from "@/components/ui/ProductCard";
+import Link from "next/link";
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
+  const supabase = await createClient();
 
   const { data: producto } = await supabase
     .from("productos")
@@ -27,6 +29,7 @@ export async function generateMetadata({ params }) {
 
 export default async function ProductPage({ params }) {
   const { slug } = await params;
+  const supabase = await createClient();
 
   const { data: producto, error } = await supabase
     .from("productos")
@@ -37,56 +40,50 @@ export default async function ProductPage({ params }) {
 
   if (error || !producto) return notFound();
 
-  // Stock total real = suma de todas las variantes
   const { data: variantes } = await supabase
     .from("producto_variantes")
-    .select("stock")
+    .select(`stock, colores(id, nombre), tallas(id, nombre)`)
     .eq("producto_id", producto.id);
 
   const stockTotal = variantes?.length
     ? variantes.reduce((sum, v) => sum + v.stock, 0)
     : producto.stock;
 
+  // Productos relacionados: misma categoría, distinto slug, máx 4
+  const { data: relacionados } = await supabase
+    .from("productos")
+    .select(`*, categorias(nombre, slug)`)
+    .eq("activo", true)
+    .eq("categoria_id", producto.categoria_id)
+    .neq("slug", slug)
+    .limit(4);
+
   return (
     <main className="max-w-6xl mx-auto px-6 py-12">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-        <ImageGallery imagenes={producto.imagenes} nombre={producto.nombre} />
+      <ProductDetailClient
+        producto={producto}
+        stockTotal={stockTotal}
+        variantes={variantes || []}
+      />
 
-        <div className="sticky top-6 space-y-6">
-          <div>
-            <p className="text-xs text-gray-400 uppercase tracking-widest">
-              {producto.categorias?.nombre}
-            </p>
-            <h1 className="mt-2 text-3xl font-bold text-gray-900">
-              {producto.nombre}
-            </h1>
-            {/* Precio con descuento */}
-            {producto.precio_descuento ? (
-              <div className="mt-3 flex items-center gap-3">
-                <p className="text-2xl text-gray-900 font-semibold">
-                  ${Number(producto.precio_descuento).toLocaleString("es-CO")}
-                </p>
-                <p className="text-lg text-gray-400 line-through">
-                  ${Number(producto.precio).toLocaleString("es-CO")}
-                </p>
-              </div>
-            ) : (
-              <p className="mt-3 text-2xl text-gray-900">
-                ${Number(producto.precio).toLocaleString("es-CO")}
-              </p>
-            )}
+      {relacionados && relacionados.length > 0 && (
+        <section className="mt-20 pt-12 border-t border-gray-100">
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <span className="text-xs tracking-[0.3em] text-gray-400 uppercase">También te puede gustar</span>
+              <h2 className="mt-1 text-2xl font-serif font-bold text-gray-900">Productos relacionados</h2>
+            </div>
+            <Link href="/products" className="text-sm text-gray-500 hover:text-black transition-colors underline underline-offset-4">
+              Ver todos →
+            </Link>
           </div>
-
-          {producto.descripcion && (
-            <p className="text-sm text-gray-600 leading-relaxed">
-              {producto.descripcion}
-            </p>
-          )}
-
-          {/* Pasamos el producto con el stock total real */}
-          <AddToCartButton product={{ ...producto, stock: stockTotal }} />
-        </div>
-      </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {relacionados.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase-browser";
+import { createClient } from "@/lib/supabase";
 
 const AuthContext = createContext({});
 
@@ -16,12 +16,23 @@ export function AuthProvider({ children }) {
 
   const cargarPerfil = async (userId) => {
     setLoadingPerfil(true);
+    // Intentamos por usuario_id (UUID de auth), con fallback a id por compatibilidad
     const { data } = await supabase
       .from("perfiles")
       .select("*")
-      .eq("id", userId)
-      .single();
-    setPerfil(data);
+      .eq("usuario_id", userId)
+      .maybeSingle();
+    if (data) {
+      setPerfil(data);
+    } else {
+      // Fallback: algunos perfiles usan id como UUID directamente
+      const { data: fallback } = await supabase
+        .from("perfiles")
+        .select("*")
+        .eq("id", userId)
+        .maybeSingle();
+      setPerfil(fallback);
+    }
     setLoadingPerfil(false);
   };
 
@@ -53,6 +64,7 @@ export function AuthProvider({ children }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setUser(null);
     setPerfil(null);
   };
 

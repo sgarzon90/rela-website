@@ -12,13 +12,14 @@ export const metadata = {
 export default async function Products({ searchParams }) {
   const params = await searchParams;
   const categoriaSlug = params?.categoria || null;
+  const tallaFiltro = params?.talla || null;
   const orden = params?.orden || "recientes";
 
-  // Traemos todas las categorías para los filtros
-  const { data: categorias } = await supabase
-    .from("categorias")
-    .select("*")
-    .order("nombre");
+  // Traemos categorías y tallas para los filtros
+  const [{ data: categorias }, { data: tallas }] = await Promise.all([
+    supabase.from("categorias").select("*").order("nombre"),
+    supabase.from("tallas").select("*").order("orden"),
+  ]);
 
   // Construimos la query base de productos
   let query = supabase
@@ -26,15 +27,18 @@ export default async function Products({ searchParams }) {
     .select(`*, categorias(nombre, slug)`)
     .eq("activo", true);
 
-  // Si hay un filtro de categoría lo aplicamos
+  // Filtro de categoría
   if (categoriaSlug) {
     const categoria = categorias?.find((c) => c.slug === categoriaSlug);
-    if (categoria) {
-      query = query.eq("categoria_id", categoria.id);
-    }
+    if (categoria) query = query.eq("categoria_id", categoria.id);
   }
 
-  // Aplicamos el orden seleccionado
+  // Filtro de talla (busca en el array de nombres guardado en el producto)
+  if (tallaFiltro) {
+    query = query.contains("tallas", [tallaFiltro]);
+  }
+
+  // Orden
   if (orden === "precio-asc") {
     query = query.order("precio", { ascending: true });
   } else if (orden === "precio-desc") {
@@ -66,7 +70,7 @@ export default async function Products({ searchParams }) {
 
       {/* Filtros — Suspense es necesario porque useSearchParams es async */}
       <Suspense fallback={<div className="h-12 mb-10" />}>
-        <ProductFilters categorias={categorias || []} />
+        <ProductFilters categorias={categorias || []} tallas={tallas || []} />
       </Suspense>
 
       {/* Grid de productos */}

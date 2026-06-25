@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase-browser"
+import { createClient } from "@/lib/supabase"
 import Link from "next/link"
 
 export default function UpdatePassword() {

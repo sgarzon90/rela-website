@@ -1,16 +1,13 @@
-import { supabase } from "@/lib/supabase"
 import Hero from "@/components/sections/Hero"
 import FeaturedProducts from "@/components/sections/FeaturedProducts"
+import CategoriesSection from "@/components/sections/CategoriesSection"
 
-export default async function Home() {
-  const { data: categorias, error } = await supabase
-    .from("categorias")
-    .select("*")
-    
+export default function Home() {
   return (
     <main>
       <Hero />
       <FeaturedProducts />
+      <CategoriesSection />
     </main>
   )
 }

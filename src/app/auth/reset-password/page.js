@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase-browser"
+import { createClient } from "@/lib/supabase"
 
 export default function ResetPassword() {
   const supabase = createClient()
@@ -35,7 +35,11 @@ export default function ResetPassword() {
     return (
       <main className="min-h-screen flex items-center justify-center px-6">
         <div className="text-center max-w-sm">
-          <div className="text-5xl mb-4">📧</div>
+          <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} className="text-gray-700">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+            </svg>
+          </div>
           <h1 className="text-xl font-bold text-gray-900">
             ¡Revisa tu correo!
           </h1>

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase-browser"
+import { createClient } from "@/lib/supabase"
 
 export default function CambiarEstadoOrden({ ordenId, estadoActual }) {
   const [estado, setEstado] = useState(estadoActual)
@@ -15,22 +15,20 @@ export default function CambiarEstadoOrden({ ordenId, estadoActual }) {
 
   const handleCambiarEstado = async () => {
     setLoading(true)
+    try {
+      const { error } = await supabase
+        .from("ordenes")
+        .update({ estado })
+        .eq("id", ordenId)
 
-    // Actualizamos el estado de la orden en la base de datos
-    const { error } = await supabase
-      .from("ordenes")
-      .update({ estado })
-      .eq("id", ordenId)
+      if (error) throw error
 
-    if (error) {
-      alert("Error al actualizar: " + error.message)
+      router.refresh()
+    } catch (err) {
+      alert("Error al actualizar: " + (err.message || "Intenta de nuevo"))
+    } finally {
       setLoading(false)
-      return
     }
-
-    // Refrescamos la página para mostrar el nuevo estado
-    router.refresh()
-    setLoading(false)
   }
 
   return (

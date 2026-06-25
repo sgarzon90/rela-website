@@ -20,39 +20,36 @@ export function FlyToCartProvider({ children }) {
   const flyToCart = useCallback((sourceRect, imageUrl) => {
     const isMobile = window.innerWidth < 768;
     const targetRef = isMobile ? cartBottomRef : cartIconRef;
-
     if (!targetRef.current) return;
 
     const cartRect = targetRef.current.getBoundingClientRect();
+    const endX = cartRect.left + cartRect.width / 2;
+    const endY = cartRect.top + cartRect.height / 2;
 
-    setFlyItem({
-      startX: sourceRect.left + sourceRect.width / 2,
-      startY: sourceRect.top + sourceRect.height / 2,
-      endX: cartRect.left + cartRect.width / 2,
-      endY: cartRect.top + cartRect.height / 2,
-      image: imageUrl,
-      isMobile,
-    });
+    let startX = sourceRect.left + sourceRect.width / 2;
+    let startY = sourceRect.top + sourceRect.height / 2;
 
-    // Duración más larga en móvil para que se aprecie el arco
-    const duration = isMobile ? 900 : 650;
+    // En móvil, el botón sticky y el carrito están casi en la misma posición
+    // (ambos en la parte inferior de la pantalla). Lanzamos desde el centro
+    // visual de la pantalla para que la animación sea visible.
+    if (isMobile && Math.abs(startY - endY) < 200) {
+      startX = window.innerWidth * 0.5;
+      startY = window.innerHeight * 0.38;
+    }
 
+    setFlyItem({ startX, startY, endX, endY, image: imageUrl, isMobile });
+
+    const duration = isMobile ? 800 : 580;
     setTimeout(() => {
       setFlyItem(null);
       setCartBounce(true);
-      setTimeout(() => setCartBounce(false), 500);
+      setTimeout(() => setCartBounce(false), 600);
     }, duration);
   }, []);
 
   return (
     <FlyToCartContext.Provider
-      value={{
-        flyToCart,
-        flyItem,
-        cartBounce,
-        cartIconRef,
-        cartBottomRef,
-      }}
+      value={{ flyToCart, flyItem, cartBounce, cartIconRef, cartBottomRef }}
     >
       {children}
       {flyItem && <FlyingItem item={flyItem} />}
@@ -60,127 +57,113 @@ export function FlyToCartProvider({ children }) {
   );
 }
 
+function bezier(t, p0, p1, p2) {
+  const inv = 1 - t;
+  return inv * inv * p0 + 2 * inv * t * p1 + t * t * p2;
+}
+
 function FlyingItem({ item }) {
-  const { startX, startY, endX, endY, isMobile } = item;
+  const { startX, startY, endX, endY, isMobile, image } = item;
 
-  // Calculamos el punto de control del arco de Bezier
-  // En móvil: el producto sube hacia arriba primero y luego baja al carrito (abajo)
-  // En desktop: curva lateral elegante
-  const midX = (startX + endX) / 2;
-  const midY = (startY + endY) / 2;
+  // Punto de control: siempre sube hacia arriba y ligeramente hacia el destino
+  const cpX = startX + (endX - startX) * 0.35;
+  const cpY = Math.min(startY, endY) - (isMobile ? window.innerHeight * 0.38 : 220);
 
-  // Control point: en móvil desviamos hacia arriba y al centro de la pantalla
-  // En desktop: desviamos lateralmente
-  const cpX = isMobile
-    ? window.innerWidth / 2                        // centro horizontal de pantalla
-    : midX + (endX > startX ? -120 : 120);        // desktop: curva lateral
-  const cpY = isMobile
-    ? Math.min(startY, endY) - window.innerHeight * 0.35  // sube bastante en móvil
-    : midY - 180;                                          // desktop: sube moderado
-
-  // Generamos los keyframes interpolando la curva de Bézier cuadrática
-  // P(t) = (1-t)²·P0 + 2(1-t)t·P1 + t²·P2
-  const steps = 20;
+  const steps = 28;
   const keyframes = Array.from({ length: steps + 1 }, (_, i) => {
     const t = i / steps;
-    const inv = 1 - t;
-    const x = inv * inv * startX + 2 * inv * t * cpX + t * t * endX;
-    const y = inv * inv * startY + 2 * inv * t * cpY + t * t * endY;
+    const x = bezier(t, startX, cpX, endX);
+    const y = bezier(t, startY, cpY, endY);
 
-    // Escala: empieza en 1, crece un poco en el arco, termina en 0.08
-    const scale = i === steps
-      ? 0.08
-      : 1 + Math.sin(t * Math.PI) * (isMobile ? 0.25 : 0.15);
-
-    // Rotación: gira suavemente durante el vuelo
-    const rotate = t * (isMobile ? 280 : 180);
-
-    // Opacidad: fade out al final
-    const opacity = t > 0.8 ? 1 - (t - 0.8) / 0.2 : 1;
+    // Escala: crece un poco en el arco, se reduce al llegar
+    const scale = t === 1 ? 0 : 1 + Math.sin(t * Math.PI) * 0.18 - t * 0.15;
+    // Rotación suave
+    const rotate = t * (isMobile ? 260 : 160);
+    // Fade out al final del recorrido
+    const opacity = t > 0.72 ? Math.max(0, 1 - (t - 0.72) / 0.28) : 1;
 
     return `${Math.round(t * 100)}% {
-      transform: translate(${x}px, ${y}px) scale(${scale.toFixed(3)}) rotate(${rotate.toFixed(1)}deg);
+      transform: translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) scale(${scale.toFixed(3)}) rotate(${rotate.toFixed(1)}deg);
       opacity: ${opacity.toFixed(2)};
     }`;
   }).join("\n");
 
-  const duration = isMobile ? 900 : 650;
-  const easing = isMobile
-    ? "cubic-bezier(0.2, 0.8, 0.4, 1)"
-    : "cubic-bezier(0.25, 0.46, 0.45, 0.94)";
-
-  const animName = `flyToCart_${Date.now()}`;
+  const duration = isMobile ? 800 : 580;
+  const easing = "cubic-bezier(0.22, 0.61, 0.36, 1)";
+  const animName = `fly_${Date.now()}`;
 
   return (
     <>
       <style>{`
-        @keyframes ${animName} {
-          ${keyframes}
+        @keyframes ${animName} { ${keyframes} }
+
+        @keyframes ${animName}_trail {
+          0%   { opacity: 0.3; transform: translate(${startX.toFixed(0)}px, ${startY.toFixed(0)}px) scale(0.85); }
+          60%  { opacity: 0.15; }
+          100% { opacity: 0; transform: translate(${cpX.toFixed(0)}px, ${cpY.toFixed(0)}px) scale(0.25); }
         }
 
-        @keyframes trailFade {
-          0% { opacity: 0.35; transform: translate(${startX}px, ${startY}px) scale(0.9); }
-          100% { opacity: 0; transform: translate(${cpX}px, ${cpY}px) scale(0.3); }
+        @keyframes ${animName}_ripple {
+          0%   { transform: translate(${endX.toFixed(0)}px, ${endY.toFixed(0)}px) scale(0); opacity: 0.7; }
+          100% { transform: translate(${endX.toFixed(0)}px, ${endY.toFixed(0)}px) scale(3.5); opacity: 0; }
         }
 
-        @keyframes ripple {
-          0%   { transform: translate(${endX}px, ${endY}px) scale(0); opacity: 0.6; }
-          100% { transform: translate(${endX}px, ${endY}px) scale(3); opacity: 0; }
-        }
-
-        .fly-item-main {
+        .fly-main-${animName} {
           position: fixed;
-          top: -40px;
-          left: -40px;
-          width: 80px;
-          height: 80px;
+          top: -36px; left: -36px;
+          width: 72px; height: 72px;
           border-radius: 10px;
           object-fit: cover;
           pointer-events: none;
           z-index: 9999;
           animation: ${animName} ${duration}ms ${easing} forwards;
-          box-shadow: 0 8px 28px rgba(0,0,0,0.25);
+          box-shadow: 0 6px 24px rgba(0,0,0,0.22);
           will-change: transform, opacity;
+          overflow: hidden;
         }
 
-        .fly-item-trail {
+        .fly-trail-${animName} {
           position: fixed;
-          top: -24px;
-          left: -24px;
-          width: 48px;
-          height: 48px;
+          top: -20px; left: -20px;
+          width: 40px; height: 40px;
           border-radius: 50%;
+          background: rgba(0,0,0,0.07);
           pointer-events: none;
           z-index: 9998;
-          background: rgba(0,0,0,0.08);
-          animation: trailFade ${duration * 0.5}ms ease-out forwards;
+          animation: ${animName}_trail ${duration * 0.55}ms ease-out forwards;
           will-change: transform, opacity;
         }
 
-        .fly-item-ripple {
+        .fly-ripple-${animName} {
           position: fixed;
-          top: -20px;
-          left: -20px;
-          width: 40px;
-          height: 40px;
+          top: -18px; left: -18px;
+          width: 36px; height: 36px;
           border-radius: 50%;
-          border: 2px solid rgba(0,0,0,0.3);
+          border: 2px solid rgba(0,0,0,0.25);
           pointer-events: none;
           z-index: 9997;
-          animation: ripple 0.45s ease-out ${duration - 100}ms forwards;
+          animation: ${animName}_ripple 420ms ease-out ${duration - 80}ms forwards;
           opacity: 0;
           will-change: transform, opacity;
         }
       `}</style>
 
-      {/* Estela detrás del producto */}
-      <div className="fly-item-trail" />
+      <div className={`fly-trail-${animName}`} />
 
-      {/* Imagen principal volando */}
-      <img className="fly-item-main" src={item.image} alt="" />
+      {image ? (
+        <img className={`fly-main-${animName}`} src={image} alt="" />
+      ) : (
+        <div
+          className={`fly-main-${animName}`}
+          style={{ background: "#000", display: "flex", alignItems: "center", justifyContent: "center" }}
+        >
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" />
+          </svg>
+        </div>
+      )}
 
-      {/* Ripple al llegar al carrito */}
-      <div className="fly-item-ripple" />
+      <div className={`fly-ripple-${animName}`} />
     </>
   );
 }

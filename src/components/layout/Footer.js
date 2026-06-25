@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -9,7 +10,7 @@ export default function Footer() {
           {/* Columna 1 — Logo y descripción */}
           <div className="col-span-2">
             <Link href="/" className="block w-fit mx-auto md:mx-0">
-              <img src="/Logo3-white.png" alt="RELA" className="h-12 w-auto" />
+              <Image src="/Logo3-white.png" alt="RELA" width={120} height={48} className="h-12 w-auto" />
             </Link>
 
             <p className="mt-4 text-sm text-gray-400 max-w-xs leading-relaxed text-center md:text-left mx-auto md:mx-0">

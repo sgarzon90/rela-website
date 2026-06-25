@@ -19,7 +19,7 @@ export function CartProvider({ children }) {
     localStorage.setItem("rela-cart", JSON.stringify(items))
   }, [items])
 
-  const addItem = (product, talla, color, cantidad = 1) => {
+  const addItem = (product, talla, color, cantidad = 1, imagenOverride = null) => {
     setItems((prev) => {
       const existing = prev.find(
         (item) =>
@@ -29,7 +29,6 @@ export function CartProvider({ children }) {
       )
 
       if (existing) {
-        // Si ya existe, aumenta la cantidad
         return prev.map((item) =>
           item.id === product.id && item.talla === talla && item.color === color
             ? { ...item, cantidad: item.cantidad + cantidad }
@@ -37,12 +36,11 @@ export function CartProvider({ children }) {
         )
       }
 
-      // Si no existe, agrégalo
       return [...prev, {
         id: product.id,
         nombre: product.nombre,
-        precio: product.precio,
-        imagen: product.imagenes?.[0] || "",
+        precio: product.precio_descuento || product.precio,
+        imagen: imagenOverride || product.imagenes?.[0] || "",
         slug: product.slug,
         talla,
         color,

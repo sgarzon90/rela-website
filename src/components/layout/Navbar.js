@@ -1,20 +1,25 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useFlyToCart } from "@/context/FlyToCartContext";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Navbar() {
   const { totalItems, setIsOpen } = useCart();
   const { user, signOut, perfil, loadingPerfil } = useAuth();
-  const { cartIconRef, cartBottomRef, cartBounce } = useFlyToCart();
+  const { cartIconRef, cartBounce } = useFlyToCart();
   const [drawerAbierto, setDrawerAbierto] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [searchAbierto, setSearchAbierto] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const pathname = usePathname();
+  const router = useRouter();
   const drawerRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -38,11 +43,30 @@ export default function Navbar() {
   // Cerrar con Escape
   useEffect(() => {
     const handleKey = (e) => {
-      if (e.key === "Escape") setDrawerAbierto(false);
+      if (e.key === "Escape") { setDrawerAbierto(false); setSearchAbierto(false); }
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
+
+  useEffect(() => {
+    if (searchAbierto) searchInputRef.current?.focus();
+  }, [searchAbierto]);
+
+  // Cerrar search al cambiar de ruta
+  useEffect(() => {
+    setSearchAbierto(false);
+    setSearchQuery("");
+  }, [pathname]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (!q) return;
+    router.push(`/search?q=${encodeURIComponent(q)}`);
+    setSearchAbierto(false);
+    setSearchQuery("");
+  };
 
   const links = [
     {
@@ -203,11 +227,7 @@ export default function Navbar() {
         <div className="max-w-6xl mx-auto h-16 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
-            <img
-              src="/Logo3.png"
-              alt="RELA"
-              className="h-12 w-auto object-contain"
-            />
+            <Image src="/Logo3.png" alt="RELA" width={120} height={48} className="h-12 w-auto object-contain" priority />
           </Link>
 
           {/* Links desktop */}
@@ -243,6 +263,35 @@ export default function Navbar() {
 
           {/* Acciones desktop */}
           <div className="hidden md:flex items-center gap-4">
+            {/* Búsqueda desktop */}
+            {searchAbierto ? (
+              <form onSubmit={handleSearch} className="flex items-center gap-2">
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar productos..."
+                  className="w-48 border-b border-gray-300 focus:border-black outline-none text-sm py-1 px-0 bg-transparent transition-colors"
+                />
+                <button type="submit" className="text-gray-500 hover:text-black transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                  </svg>
+                </button>
+                <button type="button" onClick={() => { setSearchAbierto(false); setSearchQuery(""); }} className="text-gray-400 hover:text-black transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </form>
+            ) : (
+              <button onClick={() => setSearchAbierto(true)} className="text-gray-500 hover:text-black transition-colors duration-200" aria-label="Buscar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+              </button>
+            )}
             {user ? (
               <>
                 <Link
@@ -251,11 +300,17 @@ export default function Navbar() {
                 >
                   Mis órdenes
                 </Link>
+                <Link
+                  href="/account/profile"
+                  className="text-sm text-gray-500 hover:text-black transition-colors duration-200"
+                >
+                  Mi perfil
+                </Link>
                 <span className="text-sm text-gray-600">
                   {user.user_metadata?.nombre || user.email}
                 </span>
                 <button
-                  onClick={signOut}
+                  onClick={async () => { await signOut(); router.push("/"); }}
                   className="text-sm text-gray-400 hover:text-black transition-colors duration-200"
                 >
                   Salir
@@ -284,7 +339,7 @@ export default function Navbar() {
                 viewBox="0 0 24 24"
                 stroke="currentColor"
                 strokeWidth={1.5}
-                className={cartBounce ? "animate-bounce" : ""}
+                className={cartBounce ? "animate-cart-pop" : ""}
               >
                 <path
                   strokeLinecap="round"
@@ -346,11 +401,7 @@ export default function Navbar() {
         {/* Header del drawer */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
           <Link href="/" onClick={() => setDrawerAbierto(false)}>
-            <img
-              src="/Logo3.png"
-              alt="RELA"
-              className="h-9 w-auto object-contain"
-            />
+            <Image src="/Logo3.png" alt="RELA" width={90} height={36} className="h-9 w-auto object-contain" />
           </Link>
           <button
             onClick={() => setDrawerAbierto(false)}
@@ -373,6 +424,22 @@ export default function Navbar() {
               />
             </svg>
           </button>
+        </div>
+
+        {/* Búsqueda móvil */}
+        <div className="px-4 py-3 border-b border-gray-100">
+          <form onSubmit={(e) => { setDrawerAbierto(false); handleSearch(e); }} className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} className="text-gray-400 flex-shrink-0">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar productos..."
+              className="flex-1 bg-transparent text-sm outline-none text-gray-700 placeholder:text-gray-400"
+            />
+          </form>
         </div>
 
         {/* Links de navegación */}
@@ -453,28 +520,26 @@ export default function Navbar() {
                 onClick={() => setDrawerAbierto(false)}
                 className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 hover:bg-gray-50 transition-all duration-200"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                  className="text-gray-400"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"
-                  />
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} className="text-gray-400">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
                 </svg>
                 <span className="text-sm font-medium">Mis órdenes</span>
               </Link>
+              <Link
+                href="/account/profile"
+                onClick={() => setDrawerAbierto(false)}
+                className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 hover:bg-gray-50 transition-all duration-200"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} className="text-gray-400">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                </svg>
+                <span className="text-sm font-medium">Mi perfil</span>
+              </Link>
               <button
-                onClick={() => {
-                  signOut();
+                onClick={async () => {
+                  await signOut();
                   setDrawerAbierto(false);
+                  router.push("/");
                 }}
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-gray-500 hover:bg-red-50 hover:text-red-600 transition-all duration-200"
               >
@@ -543,157 +608,6 @@ export default function Navbar() {
         )}
       </div>
 
-      {/* ─── BOTTOM BAR MÓVIL ─── */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-        <div className="flex items-center justify-around px-2 py-2 pb-[env(safe-area-inset-bottom)]">
-          {/* Inicio */}
-          <Link
-            href="/"
-            className={`flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-all duration-200 ${
-              isActive("/") ? "text-black" : "text-gray-400 hover:text-gray-600"
-            }`}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="22"
-              height="22"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={isActive("/") ? 2 : 1.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75"
-              />
-            </svg>
-            <span
-              className={`text-[10px] font-medium ${isActive("/") ? "text-black" : "text-gray-400"}`}
-            >
-              Inicio
-            </span>
-            {isActive("/") && (
-              <span className="w-1 h-1 rounded-full bg-black" />
-            )}
-          </Link>
-
-          {/* Productos */}
-          <Link
-            href="/products"
-            className={`flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-all duration-200 ${
-              isActive("/products")
-                ? "text-black"
-                : "text-gray-400 hover:text-gray-600"
-            }`}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="22"
-              height="22"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={isActive("/products") ? 2 : 1.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 6h.008v.008H6V6z"
-              />
-            </svg>
-            <span
-              className={`text-[10px] font-medium ${isActive("/products") ? "text-black" : "text-gray-400"}`}
-            >
-              Productos
-            </span>
-            {isActive("/products") && (
-              <span className="w-1 h-1 rounded-full bg-black" />
-            )}
-          </Link>
-
-          {/* Carrito — botón central destacado */}
-          <button
-            ref={cartBottomRef}
-            onClick={() => setIsOpen(true)}
-            className="relative flex flex-col items-center gap-1 px-4 py-1.5"
-            aria-label="Abrir carrito"
-          >
-            <div
-              className={`relative w-12 h-12 rounded-2xl bg-black flex items-center justify-center shadow-lg transition-transform duration-200 active:scale-95 ${cartBounce ? "animate-bounce" : ""}`}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="22"
-                height="22"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="white"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z"
-                />
-              </svg>
-              {totalItems > 0 && (
-                <span
-                  className={`absolute -top-1.5 -right-1.5 bg-white text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-black transition-transform ${cartBounce ? "scale-125" : "scale-100"}`}
-                >
-                  {totalItems}
-                </span>
-              )}
-            </div>
-            <span className="text-[10px] font-medium text-gray-400">
-              Carrito
-            </span>
-          </button>
-
-          {/* Cuenta / Login */}
-          <Link
-            href={user ? "/account/orders" : "/auth/login"}
-            className={`flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-all duration-200 ${
-              isActive("/auth") || isActive("/account")
-                ? "text-black"
-                : "text-gray-400 hover:text-gray-600"
-            }`}
-          >
-            {user ? (
-              <div className="w-[22px] h-[22px] rounded-full bg-black text-white flex items-center justify-center text-[10px] font-bold uppercase">
-                {(user.user_metadata?.nombre || user.email || "U")[0]}
-              </div>
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="22"
-                height="22"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-                />
-              </svg>
-            )}
-            <span className="text-[10px] font-medium text-gray-400">
-              {user ? "Cuenta" : "Entrar"}
-            </span>
-          </Link>
-        </div>
-      </div>
-
-      {/* Espaciador para la bottom bar en móvil */}
-      <div className="md:hidden h-20" />
     </>
   );
 }

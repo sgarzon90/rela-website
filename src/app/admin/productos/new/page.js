@@ -1,11 +1,16 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
+import { useToast } from "@/context/ToastContext"
 
 export default function NuevoProducto() {
+  const router = useRouter()
+  const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
   const [imagenes, setImagenes] = useState([])
+  const [imagenesPorColor, setImagenesPorColor] = useState({})
   const [categorias, setCategorias] = useState([])
   const [coloresDB, setColoresDB] = useState([])
   const [tallasDB, setTallasDB] = useState([])
@@ -124,6 +129,31 @@ export default function NuevoProducto() {
     setImagenes((prev) => prev.filter((_, i) => i !== index))
   }
 
+  const subirImagenColor = async (e, colorNombre) => {
+    const files = Array.from(e.target.files)
+    for (const file of files) {
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET)
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        { method: "POST", body: formData }
+      )
+      const data = await res.json()
+      setImagenesPorColor((prev) => ({
+        ...prev,
+        [colorNombre]: [...(prev[colorNombre] || []), data.secure_url],
+      }))
+    }
+  }
+
+  const eliminarImagenColor = (colorNombre, index) => {
+    setImagenesPorColor((prev) => ({
+      ...prev,
+      [colorNombre]: prev[colorNombre].filter((_, i) => i !== index),
+    }))
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
@@ -144,13 +174,14 @@ export default function NuevoProducto() {
         stock: Object.values(variantes).reduce((s, v) => s + (parseInt(v) || 0), 0),
         slug: form.slug,
         imagenes: imagenes,
+        imagenes_por_color: imagenesPorColor,
         activo: true,
       })
       .select()
       .single()
 
     if (errorProducto) {
-      alert("Error al guardar producto: " + errorProducto.message)
+      showToast("Error al guardar producto: " + errorProducto.message)
       setLoading(false)
       return
     }
@@ -175,15 +206,15 @@ export default function NuevoProducto() {
         .insert(variantesArr)
 
       if (errorVariantes) {
-        alert("Producto creado pero error en variantes: " + errorVariantes.message)
+        showToast("Producto creado pero error en variantes")
         setLoading(false)
         return
       }
     }
 
     setLoading(false)
-    alert("¡Producto creado exitosamente!")
-    window.location.href = "/admin/productos"
+    showToast("¡Producto creado exitosamente!")
+    router.push("/admin/productos")
   }
 
   return (
@@ -455,6 +486,59 @@ export default function NuevoProducto() {
             Puedes subir varias fotos una por una o eliminar las que no quieras
           </p>
         </div>
+
+        {/* Imágenes por color */}
+        {coloresSeleccionados.length > 0 && (
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-gray-700">
+              Imágenes por color{" "}
+              <span className="text-gray-400 font-normal">(opcional)</span>
+            </label>
+            <p className="text-xs text-gray-400 -mt-2">
+              Al seleccionar un color en la tienda, se mostrarán estas imágenes en lugar de las generales.
+            </p>
+            {coloresSeleccionados.map((color) => (
+              <div key={color.id} className="border border-gray-200 p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  {color.hex && (
+                    <span
+                      className="w-3 h-3 rounded-full border border-gray-300 flex-shrink-0"
+                      style={{ backgroundColor: color.hex }}
+                    />
+                  )}
+                  <p className="text-sm font-medium text-gray-800">{color.nombre}</p>
+                </div>
+                {(imagenesPorColor[color.nombre] || []).length > 0 && (
+                  <div className="grid grid-cols-4 gap-2">
+                    {imagenesPorColor[color.nombre].map((url, i) => (
+                      <div key={i} className="relative">
+                        <img
+                          src={url}
+                          alt={`${color.nombre} ${i + 1}`}
+                          className="w-full aspect-square object-cover border"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => eliminarImagenColor(color.nombre, i)}
+                          className="absolute top-1 right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center hover:bg-red-700"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => subirImagenColor(e, color.nombre)}
+                  className="w-full border border-gray-200 px-3 py-1.5 text-sm text-gray-600"
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Submit */}
         <button

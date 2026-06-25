@@ -57,8 +57,8 @@ export default function CartDrawer() {
               </div>
             ) : (
               // Recorremos cada producto del carrito
-              items.map((item, index) => (
-                <div key={index} className="flex gap-4">
+              items.map((item) => (
+                <div key={`${item.id}-${item.talla}-${item.color}`} className="flex gap-4">
 
                   {/* Imagen del producto */}
                   <div className="w-20 h-24 bg-gray-100 flex-shrink-0 overflow-hidden">

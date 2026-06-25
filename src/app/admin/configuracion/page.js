@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase-browser"
+import { supabase } from "@/lib/supabase"
 
 // ─── Modal de edición ─────────────────────────────────────────────────────────
 function ModalEditar({ item, campos, onSave, onClose }) {
