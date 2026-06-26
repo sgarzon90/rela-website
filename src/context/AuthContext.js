@@ -16,23 +16,12 @@ export function AuthProvider({ children }) {
 
   const cargarPerfil = async (userId) => {
     setLoadingPerfil(true);
-    // Intentamos por usuario_id (UUID de auth), con fallback a id por compatibilidad
     const { data } = await supabase
       .from("perfiles")
       .select("*")
-      .eq("usuario_id", userId)
-      .maybeSingle();
-    if (data) {
-      setPerfil(data);
-    } else {
-      // Fallback: algunos perfiles usan id como UUID directamente
-      const { data: fallback } = await supabase
-        .from("perfiles")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle();
-      setPerfil(fallback);
-    }
+      .eq("id", userId)
+      .single();
+    setPerfil(data);
     setLoadingPerfil(false);
   };
 
