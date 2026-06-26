@@ -94,8 +94,8 @@ export default function Checkout() {
     try {
       const supabase = createClient()
 
-      // 1. Crear la orden — auth.uid() se resuelve dentro de la función SQL
-      const { data: ordenId, error: errorOrden } = await supabase.rpc("crear_orden", {
+      // 1. Crear la orden — con timeout de 10s para evitar que se cuelgue
+      const rpcPromise = supabase.rpc("crear_orden", {
         p_total: total,
         p_items: items,
         p_nombre_cliente: form.nombre,
@@ -105,6 +105,10 @@ export default function Checkout() {
         p_departamento: form.departamento,
         p_notas: form.notas || null,
       })
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Tiempo de espera agotado. Intenta de nuevo.")), 10000)
+      )
+      const { data: ordenId, error: errorOrden } = await Promise.race([rpcPromise, timeoutPromise])
 
       if (errorOrden) throw new Error(errorOrden.message)
       const orden = { id: ordenId }
