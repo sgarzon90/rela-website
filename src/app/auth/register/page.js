@@ -2,11 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 
 export default function Register() {
-  const router = useRouter();
   const supabase = createClient();
 
   // Estado del formulario
@@ -18,6 +16,7 @@ export default function Register() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [enviado, setEnviado] = useState(false);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -58,10 +57,35 @@ export default function Register() {
       return;
     }
 
-    // Redirigimos al inicio después del registro
-    router.push("/");
-    router.refresh();
+    setEnviado(true);
   };
+
+  if (enviado) {
+    return (
+      <main className="min-h-screen flex items-center justify-center px-6">
+        <div className="w-full max-w-sm text-center space-y-5">
+          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} className="text-green-600">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Revisa tu correo</h1>
+            <p className="mt-2 text-sm text-gray-500 leading-relaxed">
+              Te enviamos un enlace de confirmación a <strong>{form.email}</strong>.<br />
+              Ábrelo para activar tu cuenta e iniciar sesión.
+            </p>
+          </div>
+          <p className="text-xs text-gray-400">
+            ¿No lo ves? Revisa la carpeta de spam.
+          </p>
+          <Link href="/auth/login" className="inline-block text-sm font-semibold underline underline-offset-4 hover:text-gray-600 transition-colors">
+            Ir al inicio de sesión
+          </Link>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="min-h-screen flex items-center justify-center px-6">
