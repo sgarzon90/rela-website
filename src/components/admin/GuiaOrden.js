@@ -16,10 +16,10 @@ export default function GuiaOrden({ ordenId, guiaActual }) {
     setLoading(true)
     setGuardado(false)
     try {
-      const { error } = await supabase
-        .from("ordenes")
-        .update({ numero_guia: guia.trim() || null })
-        .eq("id", ordenId)
+      const { error } = await supabase.rpc("actualizar_guia_orden", {
+        p_orden_id: ordenId,
+        p_guia: guia.trim() || null,
+      })
 
       if (error) throw error
 

@@ -16,10 +16,10 @@ export default function CambiarEstadoOrden({ ordenId, estadoActual }) {
   const handleCambiarEstado = async () => {
     setLoading(true)
     try {
-      const { error } = await supabase
-        .from("ordenes")
-        .update({ estado })
-        .eq("id", ordenId)
+      const { error } = await supabase.rpc("actualizar_estado_orden", {
+        p_orden_id: ordenId,
+        p_estado: estado,
+      })
 
       if (error) throw error
 
