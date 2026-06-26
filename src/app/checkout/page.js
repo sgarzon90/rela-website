@@ -189,7 +189,7 @@ export default function Checkout() {
               INICIAR SESIÓN
             </Link>
             <Link
-              href="/auth/login?tab=register&redirect=/checkout"
+              href="/auth/register"
               className="w-full border border-gray-300 text-gray-700 py-3 text-sm font-semibold hover:border-black transition-colors text-center"
             >
               CREAR CUENTA
