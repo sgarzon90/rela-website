@@ -94,23 +94,35 @@ export default function Checkout() {
     try {
       const supabase = createClient()
 
-      // 1. Crear la orden — con timeout de 10s para evitar que se cuelgue
-      const rpcPromise = supabase.rpc("crear_orden", {
-        p_total: total,
-        p_items: items,
-        p_nombre_cliente: form.nombre,
-        p_telefono: form.telefono,
-        p_direccion: form.direccion,
-        p_ciudad: form.ciudad,
-        p_departamento: form.departamento,
-        p_notas: form.notas || null,
-      })
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Tiempo de espera agotado. Intenta de nuevo.")), 10000)
-      )
-      const { data: ordenId, error: errorOrden } = await Promise.race([rpcPromise, timeoutPromise])
+      // Verificar sesión activa antes de continuar
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) throw new Error("Tu sesión expiró. Por favor inicia sesión nuevamente.")
 
-      if (errorOrden) throw new Error(errorOrden.message)
+      // 1. Crear la orden — envuelto en Promise nativa con timeout de 10s
+      const ordenId = await new Promise((resolve, reject) => {
+        const timer = setTimeout(
+          () => reject(new Error("Tiempo de espera agotado. Intenta de nuevo.")),
+          10000
+        )
+        supabase.rpc("crear_orden", {
+          p_total: total,
+          p_items: items,
+          p_nombre_cliente: form.nombre,
+          p_telefono: form.telefono,
+          p_direccion: form.direccion,
+          p_ciudad: form.ciudad,
+          p_departamento: form.departamento,
+          p_notas: form.notas || null,
+        }).then(({ data, error }) => {
+          clearTimeout(timer)
+          if (error) reject(new Error(error.message))
+          else resolve(data)
+        }).catch(err => {
+          clearTimeout(timer)
+          reject(err)
+        })
+      })
+
       const orden = { id: ordenId }
 
       // 2. Enviar emails de confirmación (no bloquea el checkout)
