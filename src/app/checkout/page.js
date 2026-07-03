@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext"
 import { createClient } from "@/lib/supabase"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { COLOMBIA, DEPARTAMENTOS } from "@/lib/colombia"
 
 const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "573160180678"
 
@@ -321,27 +322,36 @@ export default function Checkout() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Departamento *</label>
-              <input
-                type="text"
+              <select
                 name="departamento"
                 value={form.departamento}
-                onChange={handleChange}
+                onChange={(e) => {
+                  setForm((prev) => ({ ...prev, departamento: e.target.value, ciudad: "" }))
+                }}
                 required
-                placeholder="Antioquia"
-                className="w-full border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:border-black transition-colors"
-              />
+                className="w-full border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:border-black transition-colors bg-white"
+              >
+                <option value="">Seleccionar...</option>
+                {DEPARTAMENTOS.map((dep) => (
+                  <option key={dep} value={dep}>{dep}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Ciudad *</label>
-              <input
-                type="text"
+              <select
                 name="ciudad"
                 value={form.ciudad}
                 onChange={handleChange}
                 required
-                placeholder="Medellín"
-                className="w-full border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:border-black transition-colors"
-              />
+                disabled={!form.departamento}
+                className="w-full border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:border-black transition-colors bg-white disabled:bg-gray-50 disabled:text-gray-400"
+              >
+                <option value="">Seleccionar...</option>
+                {(COLOMBIA[form.departamento] || []).map((ciudad) => (
+                  <option key={ciudad} value={ciudad}>{ciudad}</option>
+                ))}
+              </select>
             </div>
           </div>
 
