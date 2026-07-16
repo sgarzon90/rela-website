@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { createClient } from "@/lib/supabase-server"
 
 export default async function CategoriesSection() {
@@ -39,10 +40,12 @@ export default async function CategoriesSection() {
             className="group relative aspect-[3/4] overflow-hidden"
           >
             {cat.imagen ? (
-              <img
+              <Image
                 src={cat.imagen}
                 alt={cat.nombre}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                fill
+                sizes="(max-width: 768px) 50vw, 25vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
             ) : (
               <div

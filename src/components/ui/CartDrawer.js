@@ -2,6 +2,7 @@
 
 import { useCart } from "@/context/CartContext"
 import Link from "next/link"
+import Image from "next/image"
 
 export default function CartDrawer() {
   // Obtenemos todo lo que necesitamos del carrito
@@ -61,12 +62,14 @@ export default function CartDrawer() {
                 <div key={`${item.id}-${item.talla}-${item.color}`} className="flex gap-4">
 
                   {/* Imagen del producto */}
-                  <div className="w-20 h-24 bg-gray-100 flex-shrink-0 overflow-hidden">
+                  <div className="w-20 h-24 bg-gray-100 flex-shrink-0 overflow-hidden relative">
                     {item.imagen && (
-                      <img
+                      <Image
                         src={item.imagen}
                         alt={item.nombre}
-                        className="w-full h-full object-cover"
+                        fill
+                        sizes="80px"
+                        className="object-cover"
                       />
                     )}
                   </div>

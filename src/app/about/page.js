@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import FadeIn from "@/components/ui/FadeIn"
 
 export const metadata = {
@@ -49,11 +50,12 @@ export default function About() {
             </div>
           </FadeIn>
 
-          {/* Tu imagen original se mantiene */}
           <FadeIn direction="left" delay={0.2}>
-            <img
+            <Image
               src="/about.png"
               alt="RELA"
+              width={1536}
+              height={2048}
               className="h-full w-auto object-contain"
             />
           </FadeIn>
