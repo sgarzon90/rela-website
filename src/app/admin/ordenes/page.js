@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
+import { ESTADOS_ORDEN, ESTADO_COLORES as estadoColores } from "@/lib/estadosOrden";
 
 export default async function AdminOrdenes({ searchParams }) {
   const supabase = await createClient();
@@ -38,23 +39,7 @@ export default async function AdminOrdenes({ searchParams }) {
     });
   }
 
-  // Colores para cada estado de la orden
-  const estadoColores = {
-    pendiente: "bg-yellow-100 text-yellow-700",
-    pagado: "bg-blue-100 text-blue-700",
-    enviado: "bg-purple-100 text-purple-700",
-    entregado: "bg-green-100 text-green-700",
-    cancelado: "bg-red-100 text-red-700",
-  };
-
-  const estados = [
-    "todas",
-    "pendiente",
-    "pagado",
-    "enviado",
-    "entregado",
-    "cancelado",
-  ];
+  const estados = ["todas", ...ESTADOS_ORDEN];
 
   return (
     <div className="p-8">

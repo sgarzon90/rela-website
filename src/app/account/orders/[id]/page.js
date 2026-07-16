@@ -1,22 +1,7 @@
 import { createClient } from "@/lib/supabase-server";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-
-const estadoColores = {
-  pendiente: "bg-yellow-100 text-yellow-700",
-  pagado: "bg-blue-100 text-blue-700",
-  enviado: "bg-purple-100 text-purple-700",
-  entregado: "bg-green-100 text-green-700",
-  cancelado: "bg-red-100 text-red-700",
-};
-
-const estadoDescripcion = {
-  pendiente: "Recibimos tu pedido y lo estamos procesando.",
-  pagado: "¡Pago confirmado! Estamos preparando tu pedido.",
-  enviado: "Tu pedido está en camino.",
-  entregado: "Tu pedido fue entregado. ¡Gracias por comprar en RELA!",
-  cancelado: "Este pedido fue cancelado.",
-};
+import { ESTADO_COLORES as estadoColores, ESTADO_DESCRIPCION as estadoDescripcion } from "@/lib/estadosOrden";
 
 export default async function OrdenDetallePage({ params }) {
   const supabase = await createClient();

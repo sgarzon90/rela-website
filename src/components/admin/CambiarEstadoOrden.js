@@ -3,15 +3,13 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase"
+import { ESTADOS_ORDEN } from "@/lib/estadosOrden"
 
 export default function CambiarEstadoOrden({ ordenId, estadoActual }) {
   const [estado, setEstado] = useState(estadoActual)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
-
-  // Estados disponibles en el flujo de una orden
-  const estados = ["pendiente", "pagado", "enviado", "entregado", "cancelado"]
 
   const handleCambiarEstado = async () => {
     setLoading(true)
@@ -41,7 +39,7 @@ export default function CambiarEstadoOrden({ ordenId, estadoActual }) {
         onChange={(e) => setEstado(e.target.value)}
         className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-black mb-3"
       >
-        {estados.map((e) => (
+        {ESTADOS_ORDEN.map((e) => (
           <option key={e} value={e} className="capitalize">
             {e.charAt(0).toUpperCase() + e.slice(1)}
           </option>

@@ -2,14 +2,7 @@ import { createClient } from "@/lib/supabase-server";
 import { notFound } from "next/navigation";
 import CambiarEstadoOrden from "@/components/admin/CambiarEstadoOrden";
 import GuiaOrden from "@/components/admin/GuiaOrden";
-
-const estadoColores = {
-  pendiente: "bg-yellow-100 text-yellow-700",
-  pagado: "bg-blue-100 text-blue-700",
-  enviado: "bg-purple-100 text-purple-700",
-  entregado: "bg-green-100 text-green-700",
-  cancelado: "bg-red-100 text-red-700",
-};
+import { ESTADO_COLORES as estadoColores } from "@/lib/estadosOrden";
 
 export default async function DetalleOrden({ params }) {
   const supabase = await createClient();
