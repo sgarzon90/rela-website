@@ -10,8 +10,12 @@ export function CartProvider({ children }) {
 
   // Cargar carrito guardado al iniciar
   useEffect(() => {
-    const saved = localStorage.getItem("rela-cart")
-    if (saved) setItems(JSON.parse(saved))
+    try {
+      const saved = localStorage.getItem("rela-cart")
+      if (saved) setItems(JSON.parse(saved))
+    } catch {
+      localStorage.removeItem("rela-cart")
+    }
   }, [])
 
   // Guardar carrito cada vez que cambia
@@ -47,7 +51,6 @@ export function CartProvider({ children }) {
         cantidad,
       }]
     })
-    //setIsOpen(true)
   }
 
   const removeItem = (id, talla, color) => {
