@@ -8,7 +8,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { COLOMBIA, DEPARTAMENTOS } from "@/lib/colombia"
 
-const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "573160180678"
+const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "573108969371"
 
 function buildWhatsAppMessage(items, total, form, ordenId) {
   const lineasProductos = items.map((item) => {
@@ -93,40 +93,81 @@ export default function Checkout() {
     setError("")
 
     try {
-      const supabase = createClient()
+      let ordenId
 
-      // Verificar sesión activa antes de continuar
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) throw new Error("Tu sesión expiró. Por favor inicia sesión nuevamente.")
+      if (user) {
+        const supabase = createClient()
 
-      // 1. Crear la orden — envuelto en Promise nativa con timeout de 10s
-      const ordenId = await new Promise((resolve, reject) => {
-        const timer = setTimeout(
-          () => reject(new Error("Tiempo de espera agotado. Intenta de nuevo.")),
-          10000
-        )
-        supabase.rpc("crear_orden", {
-          p_total: total,
-          p_items: items,
-          p_nombre_cliente: form.nombre,
-          p_telefono: form.telefono,
-          p_direccion: form.direccion,
-          p_ciudad: form.ciudad,
-          p_departamento: form.departamento,
-          p_notas: form.notas || null,
-        }).then(({ data, error }) => {
-          clearTimeout(timer)
-          if (error) reject(new Error(error.message))
-          else resolve(data)
-        }).catch(err => {
-          clearTimeout(timer)
-          reject(err)
+        // Verificar sesión activa antes de continuar
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) throw new Error("Tu sesión expiró. Por favor inicia sesión nuevamente.")
+
+        // Crear la orden — envuelto en Promise nativa con timeout de 10s
+        ordenId = await new Promise((resolve, reject) => {
+          const timer = setTimeout(
+            () => reject(new Error("Tiempo de espera agotado. Intenta de nuevo.")),
+            10000
+          )
+          supabase.rpc("crear_orden", {
+            p_total: total,
+            p_items: items,
+            p_nombre_cliente: form.nombre,
+            p_telefono: form.telefono,
+            p_direccion: form.direccion,
+            p_ciudad: form.ciudad,
+            p_departamento: form.departamento,
+            p_notas: form.notas || null,
+          }).then(({ data, error }) => {
+            clearTimeout(timer)
+            if (error) reject(new Error(error.message))
+            else resolve(data)
+          }).catch(err => {
+            clearTimeout(timer)
+            reject(err)
+          })
         })
-      })
+
+        // Descontar stock (no bloquea el checkout si falla o tarda)
+        Promise.race([
+          supabase.rpc("descontar_stock_orden", {
+            orden_items: items.map((item) => ({
+              id: item.id,
+              cantidad: item.cantidad,
+              color: item.color || null,
+              talla: item.talla || null,
+            })),
+          }),
+          new Promise((resolve) => setTimeout(resolve, 4000)),
+        ]).catch(() => {})
+      } else {
+        // Compra como invitado: la orden se crea en el servidor, sin necesitar sesión.
+        // /api/orders ya se encarga de descontar el stock del lado del servidor.
+        const response = await new Promise((resolve, reject) => {
+          const timer = setTimeout(
+            () => reject(new Error("Tiempo de espera agotado. Intenta de nuevo.")),
+            10000
+          )
+          fetch("/api/orders", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ items, total, form, userId: null }),
+          }).then((res) => {
+            clearTimeout(timer)
+            resolve(res)
+          }).catch((err) => {
+            clearTimeout(timer)
+            reject(err)
+          })
+        })
+
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.error || "No se pudo registrar el pedido")
+        ordenId = data.ordenId
+      }
 
       const orden = { id: ordenId }
 
-      // 2. Enviar emails de confirmación (no bloquea el checkout)
+      // Enviar emails de confirmación (no bloquea el checkout)
       fetch("/api/email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -143,19 +184,6 @@ export default function Checkout() {
           email: form.email || null,
         }),
       }).catch(() => {})
-
-      // 3. Descontar stock (no bloquea el checkout si falla o tarda)
-      Promise.race([
-        supabase.rpc("descontar_stock_orden", {
-          orden_items: items.map((item) => ({
-            id: item.id,
-            cantidad: item.cantidad,
-            color: item.color || null,
-            talla: item.talla || null,
-          })),
-        }),
-        new Promise((resolve) => setTimeout(resolve, 4000)),
-      ]).catch(() => {})
 
       const mensaje = buildWhatsAppMessage(items, total, form, orden.id)
       const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(mensaje)}`
@@ -175,43 +203,6 @@ export default function Checkout() {
     return (
       <main className="min-h-[60vh] flex items-center justify-center">
         <p className="text-gray-400 text-sm">Cargando...</p>
-      </main>
-    )
-  }
-
-  if (!user) {
-    return (
-      <main className="min-h-[60vh] flex items-center justify-center px-6">
-        <div className="text-center max-w-sm space-y-5">
-          <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-            </svg>
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">Inicia sesión para continuar</h2>
-            <p className="mt-2 text-sm text-gray-500 leading-relaxed">
-              Necesitas una cuenta para finalizar tu pedido. Es rápido y te permite ver el historial de tus órdenes.
-            </p>
-          </div>
-          <div className="flex flex-col gap-3">
-            <Link
-              href="/auth/login?redirect=/checkout"
-              className="w-full bg-black text-white py-3 text-sm font-semibold tracking-widest hover:bg-gray-800 transition-colors text-center"
-            >
-              INICIAR SESIÓN
-            </Link>
-            <Link
-              href="/auth/register"
-              className="w-full border border-gray-300 text-gray-700 py-3 text-sm font-semibold hover:border-black transition-colors text-center"
-            >
-              CREAR CUENTA
-            </Link>
-          </div>
-          <Link href="/products" className="text-xs text-gray-400 underline underline-offset-4 hover:text-black transition-colors">
-            Seguir comprando
-          </Link>
-        </div>
       </main>
     )
   }
@@ -271,6 +262,15 @@ export default function Checkout() {
         <span className="text-xs tracking-[0.3em] text-gray-400 uppercase">Checkout</span>
         <h1 className="mt-2 text-2xl font-bold text-gray-900">Finalizar pedido</h1>
       </div>
+
+      {!user && (
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50 border border-gray-200 px-4 py-3 text-xs text-gray-500">
+          <span>¿Ya tienes cuenta? Inicia sesión para ver este pedido en tu historial. No es obligatorio para comprar.</span>
+          <Link href="/auth/login?redirect=/checkout" className="shrink-0 font-semibold text-gray-900 underline underline-offset-4">
+            Iniciar sesión
+          </Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
 
@@ -348,7 +348,7 @@ export default function Checkout() {
                 className="w-full border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:border-black transition-colors bg-white disabled:bg-gray-50 disabled:text-gray-400"
               >
                 <option value="">Seleccionar...</option>
-                {(COLOMBIA[form.departamento] || []).map((ciudad) => (
+                {(COLOMBIA[form.departamento] || []).slice().sort().map((ciudad) => (
                   <option key={ciudad} value={ciudad}>{ciudad}</option>
                 ))}
               </select>

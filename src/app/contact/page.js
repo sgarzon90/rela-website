@@ -6,7 +6,7 @@ export const metadata = {
   description: "Contáctanos por WhatsApp o correo. RELA responde rápido.",
 }
 
-const WHATSAPP_NUMBER = "573160180678"
+const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "573108969371"
 const WHATSAPP_MESSAGE = encodeURIComponent("Hola RELA 👋 Quiero hacer un pedido.")
 
 const contactOptions = [

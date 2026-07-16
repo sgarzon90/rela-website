@@ -10,11 +10,10 @@ export async function POST(request) {
   try {
     const { items, total, form, userId } = await request.json();
 
-    if (!items?.length || !total || !form?.nombre) {
+    if (!items?.length || !total || !form?.nombre || !form?.telefono || !form?.direccion || !form?.ciudad || !form?.departamento) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
     }
 
-    // 1. Crear la orden
     const { data: orden, error: errorOrden } = await supabaseAdmin
       .from("ordenes")
       .insert({
@@ -36,48 +35,19 @@ export async function POST(request) {
       return NextResponse.json({ error: errorOrden.message }, { status: 500 });
     }
 
-    // 2. Descontar stock por cada item
-    for (const item of items) {
-      // Descontar stock del producto general
-      const { data: producto } = await supabaseAdmin
-        .from("productos")
-        .select("stock")
-        .eq("id", item.id)
-        .single();
-
-      if (producto) {
-        await supabaseAdmin
-          .from("productos")
-          .update({ stock: Math.max(0, (producto.stock || 0) - item.cantidad) })
-          .eq("id", item.id);
-      }
-
-      // Descontar stock de la variante específica (si tiene color y talla)
-      if (item.color && item.talla) {
-        const [{ data: colorRow }, { data: tallaRow }] = await Promise.all([
-          supabaseAdmin.from("colores").select("id").eq("nombre", item.color).single(),
-          supabaseAdmin.from("tallas").select("id").eq("nombre", item.talla).single(),
-        ]);
-
-        if (colorRow && tallaRow) {
-          const { data: variante } = await supabaseAdmin
-            .from("producto_variantes")
-            .select("id, stock")
-            .eq("producto_id", item.id)
-            .eq("color_id", colorRow.id)
-            .eq("talla_id", tallaRow.id)
-            .single();
-
-          if (variante) {
-            await supabaseAdmin
-              .from("producto_variantes")
-              .update({ stock: Math.max(0, (variante.stock || 0) - item.cantidad) })
-              .eq("id", variante.id)
-              .gte("stock", item.cantidad); // Solo actualiza si hay suficiente stock
-          }
-        }
-      }
-    }
+    // Descontar stock con la misma función RPC que usa el flujo con sesión
+    // (no bloquea la respuesta si falla o tarda demasiado)
+    await Promise.race([
+      supabaseAdmin.rpc("descontar_stock_orden", {
+        orden_items: items.map((item) => ({
+          id: item.id,
+          cantidad: item.cantidad,
+          color: item.color || null,
+          talla: item.talla || null,
+        })),
+      }),
+      new Promise((resolve) => setTimeout(resolve, 4000)),
+    ]).catch(() => {});
 
     return NextResponse.json({ ordenId: orden.id });
   } catch {
