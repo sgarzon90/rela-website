@@ -24,8 +24,8 @@ export default function WhatsAppButton({ telefono, mensaje = "Hola, tengo una pr
       className="fixed bottom-24 right-4 md:bottom-6 md:right-6 z-50 flex items-center gap-3 shadow-lg transition-all duration-300"
       aria-label="Contactar por WhatsApp"
     >
-      {/* Tooltip */}
-      <span className={`bg-white text-gray-800 text-xs font-medium px-3 py-2 shadow-md whitespace-nowrap transition-all duration-300 ${hovered ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2 pointer-events-none"}`}>
+      {/* Tooltip — solo tiene sentido con hover real (desktop) */}
+      <span className={`hidden md:inline-block bg-white text-gray-800 text-xs font-medium px-3 py-2 shadow-md whitespace-nowrap transition-all duration-300 ${hovered ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2 pointer-events-none"}`}>
         ¿Tienes dudas?
       </span>
 
