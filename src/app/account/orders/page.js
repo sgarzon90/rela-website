@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase-server";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ESTADO_COLORES as estadoColores } from "@/lib/estadosOrden";
@@ -8,6 +9,16 @@ export default async function Orders() {
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
+
+  // Vincula pedidos hechos como invitado (usuario_id null) que coincidan
+  // con el correo de esta cuenta, para que aparezcan en su historial.
+  if (user.email) {
+    await supabaseAdmin
+      .from("ordenes")
+      .update({ usuario_id: user.id })
+      .eq("email", user.email)
+      .is("usuario_id", null);
+  }
 
   const { data: ordenes } = await supabase
     .from("ordenes")

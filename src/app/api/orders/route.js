@@ -1,10 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SECRET_KEY
-);
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function POST(request) {
   try {
@@ -21,6 +16,7 @@ export async function POST(request) {
         estado: "pendiente",
         total,
         items,
+        email: form.email || null,
         nombre_cliente: form.nombre,
         telefono: form.telefono,
         direccion: form.direccion,
