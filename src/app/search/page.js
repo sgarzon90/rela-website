@@ -15,9 +15,9 @@ export default async function SearchPage({ searchParams }) {
     const supabase = await createClient();
     const { data } = await supabase
       .from("productos")
-      .select("id, nombre, slug, precio, imagenes, stock, categoria")
+      .select("id, nombre, slug, precio, imagenes, stock, categorias(nombre, slug)")
       .eq("activo", true)
-      .or(`nombre.ilike.%${q}%,descripcion.ilike.%${q}%,categoria.ilike.%${q}%`)
+      .or(`nombre.ilike.%${q}%,descripcion.ilike.%${q}%`)
       .order("nombre");
     productos = data || [];
   }
