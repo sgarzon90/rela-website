@@ -17,7 +17,7 @@ const contactOptions = [
       </svg>
     ),
     label: "WhatsApp",
-    value: "+57 316 018 0678",
+    value: "+57 310 896 9371",
     description: "La forma más rápida. Te respondemos en minutos.",
     href: `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`,
     cta: "Abrir WhatsApp",

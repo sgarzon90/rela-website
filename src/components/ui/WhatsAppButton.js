@@ -21,7 +21,7 @@ export default function WhatsAppButton({ telefono, mensaje = "Hola, tengo una pr
       rel="noopener noreferrer"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="fixed bottom-6 right-6 z-50 flex items-center gap-3 shadow-lg transition-all duration-300"
+      className="fixed bottom-24 right-4 md:bottom-6 md:right-6 z-50 flex items-center gap-3 shadow-lg transition-all duration-300"
       aria-label="Contactar por WhatsApp"
     >
       {/* Tooltip */}
