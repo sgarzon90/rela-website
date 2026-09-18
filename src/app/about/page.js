@@ -83,8 +83,7 @@ export default function About() {
                 <div className="text-4xl">🧵</div>
                 <h3 className="font-bold text-gray-900">Calidad real</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">
-                  Usamos materiales que duran. No fast fashion, no compromisos con
-                  la calidad.
+                  Cada prenda pasa por control de calidad antes de salir de nuestro taller. Así garantizamos que lo que recibes es exactamente lo que prometemos.
                 </p>
               </div>
             </FadeIn>
@@ -93,18 +92,17 @@ export default function About() {
                 <div className="text-4xl">🇨🇴</div>
                 <h3 className="font-bold text-gray-900">Hecho en Colombia</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">
-                  Producción local, apoyo a la industria colombiana y orgullo por
+                  Producción nacional, apoyo a la industria colombiana y orgullo por
                   lo nuestro.
                 </p>
               </div>
             </FadeIn>
             <FadeIn delay={0.2}>
               <div className="text-center space-y-3">
-                <div className="text-4xl">✦</div>
-                <h3 className="font-bold text-gray-900">Sin ruido</h3>
+                <div className="text-4xl">◯</div>
+                <h3 className="font-bold text-gray-900">Sin exceso</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">
-                  Diseños limpios, sin logos gigantes ni estampados que griten.
-                  Solo la prenda.
+                  Diseños limpios, sin logos gigantes ni estampados que griten. Solo la prenda.
                 </p>
               </div>
             </FadeIn>

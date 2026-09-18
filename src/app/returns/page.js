@@ -97,7 +97,7 @@ export default function Returns() {
                 </p>
                 <p className="leading-relaxed">
                   <strong className="text-gray-800">Cambio de talla:</strong>{" "}
-                  El cliente asume el costo del envío de regreso. RELA cubre el envío de la prenda nueva.
+                  El cliente asume los costos de envio.
                 </p>
               </div>
             </div>

@@ -15,7 +15,7 @@ const shippingDetails = [
   {
     icon: "🚚",
     title: "Transportadora",
-    description: "Trabajamos con las principales transportadoras del país: Servientrega, Coordinadora y Envia.",
+    description: "Trabajamos con las principales transportadoras del país: Servientrega, Interrapidisimo, Coordinadora y Envia.",
   },
   {
     icon: "📅",
@@ -54,7 +54,7 @@ export default function Shipping() {
         <FadeIn>
           <div className="max-w-2xl mx-auto text-center">
             <div className="text-4xl mb-4">🎁</div>
-            <h2 className="text-2xl font-bold text-gray-900">Envío gratis en compras mayores a $250.000</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Envío gratis en compras mayores a $300.000</h2>
             <p className="mt-3 text-gray-500 leading-relaxed">
               En compras menores, el costo del envío se calcula según tu ubicación al momento de pagar.
             </p>
@@ -104,7 +104,7 @@ export default function Shipping() {
                 href="mailto:soporte.rela@gmail.com"
                 className="underline text-gray-800 hover:text-black transition-colors"
               >
-                soporte.rela@gmail.com
+                soporte.rela@gmail.com o a nuestro WhatsApp
               </a>{" "}
               y te respondemos lo antes posible.
             </p>
