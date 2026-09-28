@@ -52,9 +52,17 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setPerfil(null);
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      // Si la llamada remota falla (sesión ya vencida, red, etc.) igual
+      // limpiamos el estado local abajo para que el usuario no quede
+      // "atascado" viéndose como logueado.
+      console.error("Error al cerrar sesión:", err);
+    } finally {
+      setUser(null);
+      setPerfil(null);
+    }
   };
 
   return (

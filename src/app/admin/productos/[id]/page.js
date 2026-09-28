@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { useToast } from "@/context/ToastContext"
+import { generarSlug, mensajeErrorProducto } from "@/lib/slug"
+import { subirArchivoCloudinary } from "@/lib/cloudinary-upload"
 
 export default function EditarProducto() {
   const { id } = useParams()
@@ -12,6 +14,7 @@ export default function EditarProducto() {
 
   const [loading, setLoading] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
+  const [subiendoImagenes, setSubiendoImagenes] = useState(0)
   const [imagenes, setImagenes] = useState([])
   const [imagenesPorColor, setImagenesPorColor] = useState({})
   const [categorias, setCategorias] = useState([])
@@ -88,10 +91,7 @@ export default function EditarProducto() {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
     if (name === "nombre") {
-      setForm((prev) => ({
-        ...prev,
-        slug: value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
-      }))
+      setForm((prev) => ({ ...prev, slug: generarSlug(value) }))
     }
   }
 
@@ -129,13 +129,19 @@ export default function EditarProducto() {
 
   const subirImagen = async (e) => {
     const files = Array.from(e.target.files)
-    for (const file of files) {
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET)
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, { method: "POST", body: formData })
-      const data = await res.json()
-      setImagenes((prev) => [...prev, data.secure_url])
+    e.target.value = ""
+    setSubiendoImagenes((n) => n + 1)
+    try {
+      for (const file of files) {
+        try {
+          const url = await subirArchivoCloudinary(file)
+          setImagenes((prev) => [...prev, url])
+        } catch (err) {
+          showToast(err.message)
+        }
+      }
+    } finally {
+      setSubiendoImagenes((n) => n - 1)
     }
   }
 
@@ -143,13 +149,19 @@ export default function EditarProducto() {
 
   const subirImagenColor = async (e, colorNombre) => {
     const files = Array.from(e.target.files)
-    for (const file of files) {
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET)
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, { method: "POST", body: formData })
-      const data = await res.json()
-      setImagenesPorColor((prev) => ({ ...prev, [colorNombre]: [...(prev[colorNombre] || []), data.secure_url] }))
+    e.target.value = ""
+    setSubiendoImagenes((n) => n + 1)
+    try {
+      for (const file of files) {
+        try {
+          const url = await subirArchivoCloudinary(file)
+          setImagenesPorColor((prev) => ({ ...prev, [colorNombre]: [...(prev[colorNombre] || []), url] }))
+        } catch (err) {
+          showToast(err.message)
+        }
+      }
+    } finally {
+      setSubiendoImagenes((n) => n - 1)
     }
   }
 
@@ -162,58 +174,73 @@ export default function EditarProducto() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
+    if (loading) return // evita doble envío si el usuario hace doble clic
 
-    const { error: errorProducto } = await supabase
-      .from("productos")
-      .update({
-        nombre: form.nombre,
-        descripcion: form.descripcion,
-        precio: parseFloat(form.precio),
-        precio_descuento: form.precio_descuento ? parseFloat(form.precio_descuento) : null,
-        categoria_id: parseInt(form.categoria_id),
-        tallas: tallasSeleccionadas.map((t) => t.nombre),
-        colores: coloresSeleccionados.map((c) => c.nombre),
-        stock: Object.values(variantes).reduce((s, v) => s + (parseInt(v) || 0), 0),
-        slug: form.slug,
-        imagenes,
-        imagenes_por_color: imagenesPorColor,
-        activo: form.activo,
-      })
-      .eq("id", id)
-
-    if (errorProducto) {
-      showToast("Error al guardar: " + errorProducto.message)
-      setLoading(false)
+    if (subiendoImagenes > 0) {
+      showToast("Espera a que terminen de subir las imágenes antes de guardar")
       return
     }
 
-    await supabase.from("producto_variantes").delete().eq("producto_id", id)
+    setLoading(true)
 
-    const variantesArr = []
-    for (const colorId of form.colorIds) {
-      for (const tallaId of form.tallaIds) {
-        variantesArr.push({
-          producto_id: id,
-          color_id: colorId,
-          talla_id: tallaId,
-          stock: parseInt(variantes[`${colorId}_${tallaId}`]) || 0,
+    try {
+      const { error: errorProducto } = await supabase
+        .from("productos")
+        .update({
+          nombre: form.nombre,
+          descripcion: form.descripcion,
+          precio: parseFloat(form.precio),
+          precio_descuento: form.precio_descuento ? parseFloat(form.precio_descuento) : null,
+          categoria_id: parseInt(form.categoria_id),
+          tallas: tallasSeleccionadas.map((t) => t.nombre),
+          colores: coloresSeleccionados.map((c) => c.nombre),
+          stock: Object.values(variantes).reduce((s, v) => s + (parseInt(v) || 0), 0),
+          slug: form.slug,
+          imagenes: imagenes.filter(Boolean),
+          imagenes_por_color: imagenesPorColor,
+          activo: form.activo,
         })
-      }
-    }
+        .eq("id", id)
 
-    if (variantesArr.length > 0) {
-      const { error: errorVariantes } = await supabase.from("producto_variantes").insert(variantesArr)
-      if (errorVariantes) {
-        showToast("Producto guardado pero error en variantes")
-        setLoading(false)
+      if (errorProducto) {
+        showToast("Error al guardar: " + mensajeErrorProducto(errorProducto))
         return
       }
-    }
 
-    showToast("¡Producto actualizado!")
-    setLoading(false)
-    router.push("/admin/productos")
+      // Nota: esto borra y reinserta TODAS las variantes en dos pasos, no en
+      // una transacción — si el insert de abajo llegara a fallar, las
+      // variantes anteriores ya se borraron. Lo señalamos explícitamente en
+      // el mensaje de error para que quede claro que hay que reintentar,
+      // en vez de asumir que "no pasó nada".
+      await supabase.from("producto_variantes").delete().eq("producto_id", id)
+
+      const variantesArr = []
+      for (const colorId of form.colorIds) {
+        for (const tallaId of form.tallaIds) {
+          variantesArr.push({
+            producto_id: id,
+            color_id: colorId,
+            talla_id: tallaId,
+            stock: parseInt(variantes[`${colorId}_${tallaId}`]) || 0,
+          })
+        }
+      }
+
+      if (variantesArr.length > 0) {
+        const { error: errorVariantes } = await supabase.from("producto_variantes").insert(variantesArr)
+        if (errorVariantes) {
+          showToast("El producto se guardó, pero las combinaciones no: " + errorVariantes.message + ". Vuelve a intentar guardar.")
+          return
+        }
+      }
+
+      showToast("¡Producto actualizado!")
+      router.push("/admin/productos")
+    } catch (err) {
+      showToast("Error inesperado al guardar: " + (err?.message || "intenta de nuevo"))
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleEliminar = async () => {
@@ -264,8 +291,12 @@ export default function EditarProducto() {
         {/* Descripción */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-          <textarea name="descripcion" value={form.descripcion} onChange={handleChange} rows={4}
-            className="w-full border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:border-black" />
+          <textarea name="descripcion" value={form.descripcion} onChange={handleChange} rows={8}
+            className="w-full border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:border-black font-mono"
+            placeholder={"Buzo en algodón perchado de 340 g...\n\nCaracterísticas:\n- Algodón perchado de 340 g.\n- RIB 100% algodón."} />
+          <p className="text-xs text-gray-400 mt-1">
+            Deja una línea en blanco para separar párrafos. Para una lista, empieza cada línea con <code className="bg-gray-100 px-1">-</code> (se verá con viñetas en la tienda).
+          </p>
         </div>
 
         {/* Precios */}
@@ -432,9 +463,9 @@ export default function EditarProducto() {
           </div>
         )}
 
-        <button type="submit" disabled={loading}
+        <button type="submit" disabled={loading || subiendoImagenes > 0}
           className="w-full bg-black text-white py-3 text-sm font-semibold tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-50">
-          {loading ? "GUARDANDO..." : "GUARDAR CAMBIOS"}
+          {loading ? "GUARDANDO..." : subiendoImagenes > 0 ? "SUBIENDO IMÁGENES..." : "GUARDAR CAMBIOS"}
         </button>
       </form>
     </div>

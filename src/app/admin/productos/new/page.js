@@ -4,11 +4,14 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { useToast } from "@/context/ToastContext"
+import { generarSlug, mensajeErrorProducto } from "@/lib/slug"
+import { subirArchivoCloudinary } from "@/lib/cloudinary-upload"
 
 export default function NuevoProducto() {
   const router = useRouter()
   const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [subiendoImagenes, setSubiendoImagenes] = useState(0)
   const [imagenes, setImagenes] = useState([])
   const [imagenesPorColor, setImagenesPorColor] = useState({})
   const [categorias, setCategorias] = useState([])
@@ -48,10 +51,7 @@ export default function NuevoProducto() {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
     if (name === "nombre") {
-      const slug = value.toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9-]/g, "")
-      setForm((prev) => ({ ...prev, slug }))
+      setForm((prev) => ({ ...prev, slug: generarSlug(value) }))
     }
   }
 
@@ -112,16 +112,19 @@ export default function NuevoProducto() {
 
   const subirImagen = async (e) => {
     const files = Array.from(e.target.files)
-    for (const file of files) {
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET)
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        { method: "POST", body: formData }
-      )
-      const data = await res.json()
-      setImagenes((prev) => [...prev, data.secure_url])
+    e.target.value = "" // permite volver a elegir el mismo archivo si hay que reintentar
+    setSubiendoImagenes((n) => n + 1)
+    try {
+      for (const file of files) {
+        try {
+          const url = await subirArchivoCloudinary(file)
+          setImagenes((prev) => [...prev, url])
+        } catch (err) {
+          showToast(err.message)
+        }
+      }
+    } finally {
+      setSubiendoImagenes((n) => n - 1)
     }
   }
 
@@ -131,19 +134,22 @@ export default function NuevoProducto() {
 
   const subirImagenColor = async (e, colorNombre) => {
     const files = Array.from(e.target.files)
-    for (const file of files) {
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET)
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        { method: "POST", body: formData }
-      )
-      const data = await res.json()
-      setImagenesPorColor((prev) => ({
-        ...prev,
-        [colorNombre]: [...(prev[colorNombre] || []), data.secure_url],
-      }))
+    e.target.value = ""
+    setSubiendoImagenes((n) => n + 1)
+    try {
+      for (const file of files) {
+        try {
+          const url = await subirArchivoCloudinary(file)
+          setImagenesPorColor((prev) => ({
+            ...prev,
+            [colorNombre]: [...(prev[colorNombre] || []), url],
+          }))
+        } catch (err) {
+          showToast(err.message)
+        }
+      }
+    } finally {
+      setSubiendoImagenes((n) => n - 1)
     }
   }
 
@@ -156,65 +162,82 @@ export default function NuevoProducto() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
+    if (loading) return // evita doble envío si el usuario hace doble clic
 
-    // 1. Insertar el producto (sin stock global, sin arrays de tallas/colores)
-    const { data: producto, error: errorProducto } = await supabase
-      .from("productos")
-      .insert({
-        nombre: form.nombre,
-        descripcion: form.descripcion,
-        precio: parseFloat(form.precio),
-        precio_descuento: form.precio_descuento ? parseFloat(form.precio_descuento) : null,
-        categoria_id: parseInt(form.categoria_id),
-        // Guardamos los arrays de nombres para compatibilidad con código existente
-        tallas: tallasSeleccionadas.map((t) => t.nombre),
-        colores: coloresSeleccionados.map((c) => c.nombre),
-        // Stock global = suma de todas las variantes
-        stock: Object.values(variantes).reduce((s, v) => s + (parseInt(v) || 0), 0),
-        slug: form.slug,
-        imagenes: imagenes,
-        imagenes_por_color: imagenesPorColor,
-        activo: true,
-      })
-      .select()
-      .single()
-
-    if (errorProducto) {
-      showToast("Error al guardar producto: " + errorProducto.message)
-      setLoading(false)
+    if (subiendoImagenes > 0) {
+      showToast("Espera a que terminen de subir las imágenes antes de guardar")
       return
     }
 
-    // 2. Insertar variantes
-    const variantesArr = []
-    for (const colorId of form.colorIds) {
-      for (const tallaId of form.tallaIds) {
-        const key = `${colorId}_${tallaId}`
-        variantesArr.push({
-          producto_id: producto.id,
-          color_id: colorId,
-          talla_id: tallaId,
-          stock: parseInt(variantes[key]) || 0,
+    setLoading(true)
+
+    try {
+      // 1. Insertar el producto (sin stock global, sin arrays de tallas/colores)
+      const { data: producto, error: errorProducto } = await supabase
+        .from("productos")
+        .insert({
+          nombre: form.nombre,
+          descripcion: form.descripcion,
+          precio: parseFloat(form.precio),
+          precio_descuento: form.precio_descuento ? parseFloat(form.precio_descuento) : null,
+          categoria_id: parseInt(form.categoria_id),
+          // Guardamos los arrays de nombres para compatibilidad con código existente
+          tallas: tallasSeleccionadas.map((t) => t.nombre),
+          colores: coloresSeleccionados.map((c) => c.nombre),
+          // Stock global = suma de todas las variantes
+          stock: Object.values(variantes).reduce((s, v) => s + (parseInt(v) || 0), 0),
+          slug: form.slug,
+          imagenes: imagenes.filter(Boolean),
+          imagenes_por_color: imagenesPorColor,
+          activo: true,
         })
-      }
-    }
+        .select()
+        .single()
 
-    if (variantesArr.length > 0) {
-      const { error: errorVariantes } = await supabase
-        .from("producto_variantes")
-        .insert(variantesArr)
-
-      if (errorVariantes) {
-        showToast("Producto creado pero error en variantes")
-        setLoading(false)
+      if (errorProducto) {
+        showToast("Error al guardar producto: " + mensajeErrorProducto(errorProducto))
         return
       }
-    }
 
-    setLoading(false)
-    showToast("¡Producto creado exitosamente!")
-    router.push("/admin/productos")
+      // 2. Insertar variantes
+      const variantesArr = []
+      for (const colorId of form.colorIds) {
+        for (const tallaId of form.tallaIds) {
+          const key = `${colorId}_${tallaId}`
+          variantesArr.push({
+            producto_id: producto.id,
+            color_id: colorId,
+            talla_id: tallaId,
+            stock: parseInt(variantes[key]) || 0,
+          })
+        }
+      }
+
+      if (variantesArr.length > 0) {
+        const { error: errorVariantes } = await supabase
+          .from("producto_variantes")
+          .insert(variantesArr)
+
+        if (errorVariantes) {
+          // El producto YA quedó creado en este punto. Si mandamos al usuario
+          // de vuelta al formulario de "crear" y reintenta con el mismo
+          // nombre, el slug choca con el que acabamos de crear y el error
+          // real (que las combinaciones no se guardaron) queda oculto detrás
+          // de uno nuevo y más confuso. Por eso lo llevamos a editar el
+          // producto que sí se creó, para que solo reintente las variantes.
+          showToast("El producto se creó, pero las combinaciones no se guardaron: " + errorVariantes.message)
+          router.push(`/admin/productos/${producto.id}`)
+          return
+        }
+      }
+
+      showToast("¡Producto creado exitosamente!")
+      router.push("/admin/productos")
+    } catch (err) {
+      showToast("Error inesperado al guardar: " + (err?.message || "intenta de nuevo"))
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -264,10 +287,13 @@ export default function NuevoProducto() {
             name="descripcion"
             value={form.descripcion}
             onChange={handleChange}
-            rows={4}
-            className="w-full border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:border-black"
-            placeholder="Describe el producto..."
+            rows={8}
+            className="w-full border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:border-black font-mono"
+            placeholder={"Buzo en algodón perchado de 340 g...\n\nCaracterísticas:\n- Algodón perchado de 340 g.\n- RIB 100% algodón."}
           />
+          <p className="text-xs text-gray-400 mt-1">
+            Deja una línea en blanco para separar párrafos. Para una lista, empieza cada línea con <code className="bg-gray-100 px-1">-</code> (se verá con viñetas en la tienda).
+          </p>
         </div>
 
         {/* Precio */}
@@ -543,10 +569,10 @@ export default function NuevoProducto() {
         {/* Submit */}
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || subiendoImagenes > 0}
           className="w-full bg-black text-white py-3 text-sm font-semibold tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-50"
         >
-          {loading ? "GUARDANDO..." : "CREAR PRODUCTO"}
+          {loading ? "GUARDANDO..." : subiendoImagenes > 0 ? "SUBIENDO IMÁGENES..." : "CREAR PRODUCTO"}
         </button>
 
       </form>

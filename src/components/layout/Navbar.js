@@ -16,10 +16,27 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [searchAbierto, setSearchAbierto] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [signingOut, setSigningOut] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const drawerRef = useRef(null);
   const searchInputRef = useRef(null);
+
+  // Cierra sesión y fuerza que las rutas protegidas (ej. /admin, que valida
+  // la sesión en el servidor) se re-evalúen — sin esto, el layout de admin
+  // podía quedar sirviendo la versión en caché de la sesión anterior y el
+  // botón parecía "no hacer nada" hasta refrescar o borrar caché.
+  const handleSignOut = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await signOut();
+      router.push("/");
+      router.refresh();
+    } finally {
+      setSigningOut(false);
+    }
+  };
 
   useEffect(() => {
     let ticking = false;
@@ -318,10 +335,11 @@ export default function Navbar() {
                   {user.user_metadata?.nombre || user.email}
                 </span>
                 <button
-                  onClick={async () => { await signOut(); router.push("/"); }}
-                  className="text-sm text-gray-400 hover:text-black transition-colors duration-200"
+                  onClick={handleSignOut}
+                  disabled={signingOut}
+                  className="text-sm text-gray-400 hover:text-black transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Salir
+                  {signingOut ? "Saliendo..." : "Salir"}
                 </button>
               </>
             ) : (
@@ -544,12 +562,12 @@ export default function Navbar() {
                 <span className="text-sm font-medium">Mi perfil</span>
               </Link>
               <button
-                onClick={async () => {
-                  await signOut();
+                onClick={() => {
                   setDrawerAbierto(false);
-                  router.push("/");
+                  handleSignOut();
                 }}
-                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-gray-500 hover:bg-red-50 hover:text-red-600 transition-all duration-200"
+                disabled={signingOut}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-gray-500 hover:bg-red-50 hover:text-red-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -566,7 +584,7 @@ export default function Navbar() {
                     d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"
                   />
                 </svg>
-                <span className="text-sm font-medium">Cerrar sesión</span>
+                <span className="text-sm font-medium">{signingOut ? "Cerrando sesión..." : "Cerrar sesión"}</span>
               </button>
             </div>
           ) : (
