@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Geist } from "next/font/google";
 import { Playfair_Display } from "next/font/google";
 import "./globals.css";
@@ -10,6 +11,10 @@ import { ToastProvider } from "@/context/ToastContext";
 import BottomBar from "@/components/layout/BottomBar";
 import { FlyToCartProvider } from "@/context/FlyToCartContext";
 import WhatsAppButton from "@/components/ui/WhatsAppButton";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+import GoogleAnalyticsPageview from "@/components/analytics/GoogleAnalyticsPageview";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -60,6 +65,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <body className={`${geist.variable} ${playfair.variable} font-sans`}>
+        <GoogleAnalytics />
+        <Suspense fallback={null}>
+          <GoogleAnalyticsPageview />
+        </Suspense>
         <AuthProvider>
           <CartProvider>
             <FlyToCartProvider>
@@ -70,6 +79,8 @@ export default function RootLayout({ children }) {
                 <Footer />
                 <BottomBar />
                 <WhatsAppButton />
+                <Analytics />
+                <SpeedInsights />
               </ToastProvider>
             </FlyToCartProvider>
           </CartProvider>

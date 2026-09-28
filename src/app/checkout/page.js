@@ -7,6 +7,15 @@ import { createClient } from "@/lib/supabase"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { COLOMBIA, DEPARTAMENTOS } from "@/lib/colombia"
+import { event as gaEvent } from "@/lib/gtag"
+
+const itemsParaGA = (items) => items.map((item) => ({
+  item_id: String(item.id),
+  item_name: item.nombre,
+  item_variant: [item.talla, item.color].filter(Boolean).join(" / "),
+  price: Number(item.precio),
+  quantity: item.cantidad,
+}))
 
 const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "573108969371"
 
@@ -51,6 +60,18 @@ export default function Checkout() {
     direccion: "",
     notas: "",
   })
+
+  useEffect(() => {
+    if (items.length === 0) return
+    gaEvent("begin_checkout", {
+      currency: "COP",
+      value: total,
+      items: itemsParaGA(items),
+    })
+    // Solo se dispara al entrar a la página con productos en el carrito,
+    // no cada vez que el carrito cambia mientras el usuario llena el form.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (!user) return
@@ -187,6 +208,13 @@ export default function Checkout() {
 
       const mensaje = buildWhatsAppMessage(items, total, form, orden.id)
       const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(mensaje)}`
+
+      gaEvent("purchase", {
+        transaction_id: String(orden.id),
+        currency: "COP",
+        value: total,
+        items: itemsParaGA(items),
+      })
 
       clearCart()
       setWhatsappUrl(url)
