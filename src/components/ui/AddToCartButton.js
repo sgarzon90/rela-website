@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useCart } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";
 import { useFlyToCart } from "@/context/FlyToCartContext";
+import { event as gaEvent } from "@/lib/gtag";
 
 function ColorSelector({ colores, selectedColor, onSelect }) {
   if (colores.length === 0) return null;
@@ -110,6 +111,7 @@ export default function AddToCartButton({ product, variantes = [], onColorChange
 
   const stockParaMostrar = usaVariantes ? stockActual : product.stock;
   const agotado = stockParaMostrar !== null && stockParaMostrar === 0;
+  const pocasUnidades = stockParaMostrar !== null && stockParaMostrar > 0 && stockParaMostrar <= 5;
 
   const imagenSeleccionada =
     (selectedColor && product.imagenes_por_color?.[selectedColor]?.[0]) ||
@@ -134,14 +136,35 @@ export default function AddToCartButton({ product, variantes = [], onColorChange
       flyToCart(rect, imagenSeleccionada);
     }
     addItem(product, selectedTalla, selectedColor, 1, imagenSeleccionada);
+
+    const precio = Number(product.precio_descuento || product.precio);
+    gaEvent("add_to_cart", {
+      currency: "COP",
+      value: precio,
+      items: [{
+        item_id: String(product.id),
+        item_name: product.nombre,
+        item_variant: [selectedColor, selectedTalla].filter(Boolean).join(" / "),
+        price: precio,
+        quantity: 1,
+      }],
+    });
   };
 
   const stockLabel =
     stockParaMostrar === null
       ? "Selecciona color y talla para ver disponibilidad"
       : stockParaMostrar > 0
-        ? `${stockParaMostrar} unidades disponibles`
+        ? pocasUnidades
+          ? `¡Solo quedan ${stockParaMostrar} unidades!`
+          : `${stockParaMostrar} unidades disponibles`
         : "Agotado";
+
+  const stockLabelClass = agotado
+    ? "text-sm text-red-500"
+    : pocasUnidades
+      ? "text-sm text-amber-600 font-medium"
+      : "text-sm text-gray-500";
 
   return (
     <>
@@ -158,7 +181,7 @@ export default function AddToCartButton({ product, variantes = [], onColorChange
           onSelect={setSelectedTalla}
           tallaAgotada={tallaAgotadaParaColor}
         />
-        <p className="text-sm text-gray-500">{stockLabel}</p>
+        <p className={stockLabelClass}>{stockLabel}</p>
         <button
           ref={buttonDesktopRef}
           onClick={() => handleAddToCart(buttonDesktopRef)}
@@ -182,8 +205,7 @@ export default function AddToCartButton({ product, variantes = [], onColorChange
           onSelect={setSelectedTalla}
           tallaAgotada={tallaAgotadaParaColor}
         />
-        <p className="text-sm text-gray-500">{stockLabel}</p>
-        <div className="h-20" />
+        <p className={stockLabelClass}>{stockLabel}</p>
       </div>
 
       {/* Botón sticky móvil */}

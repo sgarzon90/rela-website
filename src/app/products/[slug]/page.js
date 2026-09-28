@@ -16,12 +16,19 @@ export async function generateMetadata({ params }) {
 
   if (!producto) return { title: "Producto no encontrado" };
 
+  // La descripción se escribe con saltos de línea y guiones para verse
+  // formateada en la página del producto; para el meta tag (donde no hay
+  // formato) la aplanamos a una sola línea de texto plano.
+  const descripcionPlana = producto.descripcion
+    ? producto.descripcion.replace(/\s+/g, " ").trim()
+    : `Compra ${producto.nombre} en RELA`;
+
   return {
     title: producto.nombre,
-    description: producto.descripcion || `Compra ${producto.nombre} en RELA`,
+    description: descripcionPlana,
     openGraph: {
       title: producto.nombre,
-      description: producto.descripcion || `Compra ${producto.nombre} en RELA`,
+      description: descripcionPlana,
       images: producto.imagenes?.[0] ? [{ url: producto.imagenes[0] }] : [],
     },
   };
