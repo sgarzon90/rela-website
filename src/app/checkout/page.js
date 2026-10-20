@@ -59,6 +59,8 @@ export default function Checkout() {
     ciudad: "",
     direccion: "",
     notas: "",
+    referencia_extra: "", // honeypot: campo oculto que ningún humano llena, solo bots
+    aceptaTerminos: false,
   })
 
   useEffect(() => {
@@ -105,11 +107,23 @@ export default function Checkout() {
   }, [user])
 
   const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+    const { name, type, value, checked } = e.target
+    setForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }))
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    // Honeypot: campo invisible para personas. Si viene lleno, quien lo
+    // mandó fue un bot rellenando el formulario a ciegas — no mostramos
+    // ningún error (para no delatar la trampa) y simplemente no seguimos.
+    if (form.referencia_extra) return
+
+    if (!form.aceptaTerminos) {
+      setError("Debes aceptar los Términos y la Política de privacidad para continuar")
+      return
+    }
+
     setLoading(true)
     setError("")
 
@@ -147,6 +161,15 @@ export default function Checkout() {
             reject(err)
           })
         })
+
+        // La función `crear_orden` vive en Supabase y no la tocamos desde
+        // acá, así que dejamos constancia de la aceptación de términos con
+        // una llamada aparte (no bloquea el checkout si falla o tarda).
+        fetch("/api/orders/accept-terms", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ordenId }),
+        }).catch(() => {})
 
         // Descontar stock (no bloquea el checkout si falla o tarda)
         Promise.race([
@@ -188,22 +211,14 @@ export default function Checkout() {
 
       const orden = { id: ordenId }
 
-      // Enviar emails de confirmación (no bloquea el checkout)
+      // Enviar emails de confirmación (no bloquea el checkout). El servidor
+      // vuelve a leer el pedido completo desde la base de datos usando solo
+      // este ID — no reenviamos los datos del formulario, para que no se
+      // puedan usar para enviar un correo con contenido distinto al real.
       fetch("/api/email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: orden.id,
-          items,
-          total,
-          nombre_cliente: form.nombre,
-          telefono: form.telefono,
-          direccion: form.direccion,
-          ciudad: form.ciudad,
-          departamento: form.departamento,
-          notas: form.notas || null,
-          email: form.email || null,
-        }),
+        body: JSON.stringify({ id: orden.id }),
       }).catch(() => {})
 
       const mensaje = buildWhatsAppMessage(items, total, form, orden.id)
@@ -308,6 +323,21 @@ export default function Checkout() {
             Datos de envío
           </h2>
 
+          {/* Honeypot anti-spam: oculto para personas, los bots que llenan
+              formularios a ciegas suelen completarlo igual. */}
+          <div className="absolute -left-[9999px] w-px h-px overflow-hidden" aria-hidden="true">
+            <label htmlFor="referencia_extra">No llenar este campo</label>
+            <input
+              type="text"
+              id="referencia_extra"
+              name="referencia_extra"
+              value={form.referencia_extra}
+              onChange={handleChange}
+              tabIndex={-1}
+              autoComplete="off"
+            />
+          </div>
+
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Nombre completo *</label>
             <input
@@ -408,11 +438,33 @@ export default function Checkout() {
             />
           </div>
 
+          <div className="flex items-start gap-2.5">
+            <input
+              type="checkbox"
+              id="aceptaTerminos"
+              name="aceptaTerminos"
+              checked={form.aceptaTerminos}
+              onChange={handleChange}
+              required
+              className="mt-0.5 flex-shrink-0"
+            />
+            <label htmlFor="aceptaTerminos" className="text-xs text-gray-500 leading-relaxed">
+              He leído y acepto los{" "}
+              <Link href="/terms" target="_blank" className="underline text-gray-800 hover:text-black transition-colors">
+                Términos y condiciones
+              </Link>{" "}
+              y la{" "}
+              <Link href="/privacy" target="_blank" className="underline text-gray-800 hover:text-black transition-colors">
+                Política de privacidad
+              </Link>.
+            </label>
+          </div>
+
           {error && <p className="text-sm text-red-500">{error}</p>}
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !form.aceptaTerminos}
             className="w-full bg-black text-white py-4 text-sm font-semibold tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-3"
           >
             {loading ? (

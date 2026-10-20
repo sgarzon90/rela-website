@@ -13,13 +13,15 @@ export default function Register() {
     email: "",
     password: "",
     confirmPassword: "",
+    aceptaTerminos: false,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [enviado, setEnviado] = useState(false);
 
   const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, type, value, checked } = e.target;
+    setForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
   };
 
   const handleSubmit = async (e) => {
@@ -41,8 +43,14 @@ export default function Register() {
       return;
     }
 
+    if (!form.aceptaTerminos) {
+      setError("Debes aceptar los Términos y la Política de privacidad para continuar");
+      setLoading(false);
+      return;
+    }
+
     // Registramos el usuario en Supabase
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
@@ -55,6 +63,16 @@ export default function Register() {
       setError("Error al crear la cuenta. Intenta de nuevo.");
       setLoading(false);
       return;
+    }
+
+    // Deja constancia de cuándo esta cuenta aceptó los Términos/Privacidad
+    // (no bloquea el registro si falla o tarda).
+    if (data?.user?.id) {
+      fetch("/api/auth/accept-terms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: data.user.id }),
+      }).catch(() => {});
     }
 
     setEnviado(true);
@@ -165,12 +183,34 @@ export default function Register() {
             />
           </div>
 
+          <div className="flex items-start gap-2.5">
+            <input
+              type="checkbox"
+              id="aceptaTerminos"
+              name="aceptaTerminos"
+              checked={form.aceptaTerminos}
+              onChange={handleChange}
+              required
+              className="mt-0.5 flex-shrink-0"
+            />
+            <label htmlFor="aceptaTerminos" className="text-xs text-gray-500 leading-relaxed">
+              He leído y acepto los{" "}
+              <Link href="/terms" target="_blank" className="underline text-gray-800 hover:text-black transition-colors">
+                Términos y condiciones
+              </Link>{" "}
+              y la{" "}
+              <Link href="/privacy" target="_blank" className="underline text-gray-800 hover:text-black transition-colors">
+                Política de privacidad
+              </Link>.
+            </label>
+          </div>
+
           {/* Mensaje de error */}
           {error && <p className="text-sm text-red-500">{error}</p>}
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !form.aceptaTerminos}
             className="w-full bg-black text-white py-3 text-sm font-semibold tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-50"
           >
             {loading ? "CREANDO CUENTA..." : "CREAR CUENTA"}
