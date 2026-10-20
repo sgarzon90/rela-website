@@ -15,6 +15,8 @@ export default async function sitemap() {
     { url: `${baseUrl}/contact`, lastModified: new Date(), priority: 0.6 },
     { url: `${baseUrl}/shipping`, lastModified: new Date(), priority: 0.5 },
     { url: `${baseUrl}/returns`, lastModified: new Date(), priority: 0.5 },
+    { url: `${baseUrl}/privacy`, lastModified: new Date(), priority: 0.3 },
+    { url: `${baseUrl}/terms`, lastModified: new Date(), priority: 0.3 },
   ];
 
   const { data: productos } = await supabase

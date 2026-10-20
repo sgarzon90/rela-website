@@ -1,12 +1,26 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Script from "next/script";
 import { GA_MEASUREMENT_ID } from "@/lib/gtag";
+import { getConsent, CONSENT_EVENT } from "@/lib/cookie-consent";
 
-// Carga el script de gtag.js. `send_page_view: false` porque las vistas de
-// página se disparan a mano en GoogleAnalyticsPageview.js — necesario en
-// Next.js App Router, donde navegar entre páginas no recarga el documento
-// (el registro automático de GA solo vería la primera página de cada visita).
+// Carga el script de gtag.js solo si la persona aceptó el aviso de cookies.
+// `send_page_view: false` porque las vistas de página se disparan a mano en
+// GoogleAnalyticsPageview.js — necesario en Next.js App Router, donde
+// navegar entre páginas no recarga el documento.
 export default function GoogleAnalytics() {
-  if (!GA_MEASUREMENT_ID) return null;
+  const [habilitado, setHabilitado] = useState(false);
+
+  useEffect(() => {
+    setHabilitado(getConsent() === "accepted");
+
+    const onChange = (e) => setHabilitado(e.detail === "accepted");
+    window.addEventListener(CONSENT_EVENT, onChange);
+    return () => window.removeEventListener(CONSENT_EVENT, onChange);
+  }, []);
+
+  if (!GA_MEASUREMENT_ID || !habilitado) return null;
 
   return (
     <>

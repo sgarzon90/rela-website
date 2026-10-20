@@ -15,6 +15,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import GoogleAnalyticsPageview from "@/components/analytics/GoogleAnalyticsPageview";
+import CookieConsent from "@/components/ui/CookieConsent";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -27,6 +28,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   title: {
     default: "RELA — Ropa que habla por ti",
     template: "%s | RELA",
@@ -49,11 +51,16 @@ export const metadata = {
     siteName: "RELA",
     title: "RELA — Ropa que habla por ti",
     description: "Tienda de ropa minimalista hecha en Colombia.",
+    // Imagen de respaldo para páginas que no definen la suya propia (las de
+    // producto sí tienen su propia foto) — antes no había ninguna, así que
+    // compartir el inicio, Nosotros, etc. no mostraba ninguna vista previa.
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "RELA — Ropa que habla por ti",
     description: "Tienda de ropa minimalista hecha en Colombia.",
+    images: ["/og-image.jpg"],
   },
   robots: {
     index: true,
@@ -79,6 +86,7 @@ export default function RootLayout({ children }) {
                 <Footer />
                 <BottomBar />
                 <WhatsAppButton />
+                <CookieConsent />
                 <Analytics />
                 <SpeedInsights />
               </ToastProvider>

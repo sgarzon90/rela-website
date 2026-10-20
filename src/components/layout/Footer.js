@@ -78,10 +78,18 @@ export default function Footer() {
         </div>
 
         {/* Línea inferior */}
-        <div className="border-t border-gray-800 mt-12 pt-8 flex items-center justify-center">
+        <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6">
           <p className="text-xs text-gray-500">
             © {new Date().getFullYear()} RELA. Todos los derechos reservados.
           </p>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="text-xs text-gray-500 hover:text-white transition-colors underline underline-offset-2">
+              Privacidad
+            </Link>
+            <Link href="/terms" className="text-xs text-gray-500 hover:text-white transition-colors underline underline-offset-2">
+              Términos
+            </Link>
+          </div>
         </div>
 
       </div>
