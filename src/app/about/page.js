@@ -52,7 +52,7 @@ export default function About() {
 
           <FadeIn direction="left" delay={0.2}>
             <Image
-              src="/about.png"
+              src="/about.jpg"
               alt="RELA"
               width={1536}
               height={2048}

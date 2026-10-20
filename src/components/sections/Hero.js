@@ -1,13 +1,20 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Hero() {
   return (
     <section className="relative text-white min-h-[90vh] flex items-end md:items-center justify-center overflow-hidden">
 
-      {/* Imagen de fondo */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/hero.jpg')" }}
+      {/* Imagen de fondo — next/image la sirve en WebP/AVIF y al tamaño justo
+          según el dispositivo (antes era un fondo CSS con el archivo
+          original de 5.9MB sin optimizar en absoluto). */}
+      <Image
+        src="/hero.jpg"
+        alt="Modelos usando ropa RELA"
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover"
       />
 
       {/* Overlay oscuro para legibilidad del texto */}
